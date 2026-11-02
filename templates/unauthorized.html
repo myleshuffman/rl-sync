@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Access Denied – RL Sync</title>
+    <link rel="icon" type="image/svg+xml" href="/static/escalation_icon.svg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --dc-navy: #0c2a4f;
+            --dc-blue: #0570d6;
+            --dc-bg: #f4f6fa;
+            --dc-text: #1a2332;
+            --dc-muted: #64748b;
+            --dc-card-border: #e2e8f0;
+            --dc-accent-red: #e34a4a;
+        }
+        body {
+            background: var(--dc-bg);
+            color: var(--dc-text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .auth-card {
+            max-width: 480px;
+            background: #fff;
+            border: 1px solid var(--dc-card-border);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(12, 42, 79, 0.06);
+            border-top: 4px solid var(--dc-accent-red);
+        }
+        .auth-card .brand {
+            background: var(--dc-navy);
+            color: #fff;
+            padding: 22px 24px;
+            text-align: center;
+        }
+        .auth-card .brand .logo {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+        .auth-card .brand .logo .dot {
+            color: var(--dc-blue);
+            font-size: 14px;
+            vertical-align: super;
+        }
+        .auth-card .brand .sublabel {
+            font-size: 12px;
+            color: #a8b8cf;
+            margin-top: 4px;
+        }
+        .auth-card .body {
+            padding: 32px 28px;
+            text-align: center;
+        }
+        .auth-card .icon-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(227, 74, 74, 0.1);
+            color: var(--dc-accent-red);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+        <div class="auth-card w-100">
+            <div class="brand">
+                <div class="logo">digicert<span class="dot">°</span>ONE</div>
+                <div class="sublabel">Professional Services</div>
+            </div>
+            <div class="body">
+                <div class="icon-circle">⛔</div>
+                <h5 class="mb-3">Access Denied</h5>
+                <p class="text-muted" style="font-size: 13px;">
+                    Your account (<strong>{{ user.email }}</strong>) is not authorised to access this application.
+                </p>
+                <p class="text-muted" style="font-size: 13px;">Please contact your administrator to request access.</p>
+                <a href="/logout" class="btn btn-secondary mt-2">Sign out</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,2437 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RocketLane Projects</title>
+  <link rel="icon" type="image/svg+xml" href="/static/escalation_icon.svg">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    :root {
+      --dc-navy: #0c2a4f;
+      --dc-navy-dark: #082141;
+      --dc-navy-light: #143a66;
+      --dc-navy-active: #1a4a85;
+      --dc-sidebar-text: #a8b8cf;
+      --dc-sidebar-text-2: #7a8ba8;
+      --dc-blue: #0570d6;
+      --dc-blue-hover: #045eb8;
+      --dc-bg: #f4f6fa;
+      --dc-card-border: #e2e8f0;
+      --dc-text: #1a2332;
+      --dc-muted: #64748b;
+      --dc-table-header: #f0f3f8;
+      --dc-row-critical: #d93838;
+      --dc-row-warning: #c97613;
+      --dc-row-ok: #1d9c5e;
+      --dc-accent-blue: #0570d6;
+      --dc-accent-green: #1d9c5e;
+      --dc-accent-purple: #8a4fff;
+      --dc-accent-orange: #f4a118;
+      --dc-accent-red: #e34a4a;
+      --dc-accent-teal: #14b8b8;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background: var(--dc-bg);
+      color: var(--dc-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--dc-navy);
+      color: var(--dc-sidebar-text);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .sidebar-brand {
+      padding: 22px 22px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .sidebar-brand .logo {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .sidebar-brand .logo .dot {
+      color: var(--dc-blue);
+      font-size: 14px;
+      vertical-align: super;
+    }
+
+    .sidebar-brand .sublabel {
+      font-size: 12px;
+      color: var(--dc-sidebar-text);
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    .sidebar-regions {
+      display: flex;
+      gap: 6px;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .region-pill {
+      flex: 1;
+      text-align: center;
+      padding: 6px 0;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.4px;
+      color: var(--dc-sidebar-text);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid transparent;
+      border-radius: 3px;
+      text-decoration: none;
+    }
+
+    .region-pill:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .region-pill.active {
+      background: var(--dc-blue);
+      color: #fff;
+      border-color: var(--dc-blue);
+    }
+
+    .sidebar-nav {
+      padding: 12px 0;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 22px;
+      color: var(--dc-sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+    }
+
+    .sidebar-nav a.active {
+      background: var(--dc-navy-light);
+      color: #fff;
+      border-left-color: var(--dc-blue);
+      font-weight: 500;
+    }
+
+    .sidebar-nav .nav-icon {
+      width: 16px;
+      display: inline-flex;
+      justify-content: center;
+      opacity: 0.85;
+    }
+
+    .sidebar-nav a.sidebar-sub {
+      padding-left: 50px;
+      font-size: 13px;
+    }
+    .chevron {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: 0.6;
+      transition: transform 0.2s ease;
+    }
+    .sidebar-group.expanded > a .chevron {
+      transform: rotate(90deg);
+    }
+    .sidebar-children {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease;
+    }
+    .sidebar-group.expanded > .sidebar-children {
+      max-height: 200px;
+    }
+
+    .sidebar-section {
+      padding: 16px 22px 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+      color: var(--dc-sidebar-text-2);
+      text-transform: none;
+    }
+
+    .sidebar-section-title {
+      color: var(--dc-accent-green);
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-snap-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      font-size: 12px;
+      color: var(--dc-sidebar-text);
+    }
+
+    .sidebar-snap-row .label {
+      color: var(--dc-sidebar-text);
+    }
+
+    .sidebar-snap-row .date {
+      color: var(--dc-sidebar-text-2);
+    }
+
+    .sidebar-actions {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 8px 0;
+    }
+
+    /* Pin this action group (Refresh Projects, Settings) to the bottom, above the footer. */
+    .sidebar-actions-bottom {
+      margin-top: auto;
+    }
+
+    .sidebar-actions a,
+    .sidebar-actions button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 22px;
+      color: var(--dc-sidebar-text);
+      font-size: 14px;
+      font-family: inherit;
+      text-decoration: none;
+      background: transparent;
+      border: none;
+      border-left: 3px solid transparent;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .sidebar-actions a:hover,
+    .sidebar-actions button:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+    }
+
+    .sidebar-actions button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .sidebar-actions .nav-icon {
+      width: 16px;
+      display: inline-flex;
+      justify-content: center;
+      opacity: 0.85;
+    }
+
+    .sidebar-footer {
+      padding: 12px 22px 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 11px;
+      color: var(--dc-sidebar-text-2);
+    }
+
+    .sidebar-footer .last-refresh {
+      margin-bottom: 4px;
+    }
+
+    .sidebar-footer .version {
+      opacity: 0.7;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 22px 32px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--dc-text);
+      margin: 0;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 13px;
+      color: var(--dc-muted);
+    }
+
+    .topbar-right .user-name {
+      color: var(--dc-text);
+      font-weight: 500;
+    }
+
+    .topbar-right .admin-badge {
+      background: var(--dc-blue);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 6px;
+    }
+
+    .topbar-right a {
+      color: var(--dc-muted);
+      text-decoration: none;
+    }
+
+    .topbar-right a:hover {
+      color: var(--dc-blue);
+    }
+
+    /* ---------- KPI cards ---------- */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .kpi-card.kpi-purple {
+      border-left-color: var(--dc-accent-purple);
+    }
+
+    .kpi-card {
+      background: #fff;
+      border: 1px solid var(--dc-card-border);
+      border-left: 4px solid var(--dc-accent-blue);
+      border-radius: 4px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      cursor: pointer;
+      transition: box-shadow 0.12s, transform 0.12s;
+    }
+
+    .kpi-card:hover {
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .kpi-card.active {
+      box-shadow: 0 0 0 2px var(--dc-accent-blue) inset;
+      background: #f7fafd;
+    }
+
+    .kpi-card .label {
+      font-size: 12px;
+      color: var(--dc-muted);
+      margin-bottom: 6px;
+    }
+
+    .kpi-card .value {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--dc-text);
+      letter-spacing: -0.5px;
+    }
+
+    .kpi-card .arr {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--dc-muted);
+      margin-top: 2px;
+    }
+
+    .kpi-card.kpi-blue {
+      border-left-color: var(--dc-accent-blue);
+    }
+
+    .kpi-card.kpi-red {
+      border-left-color: var(--dc-accent-red);
+    }
+
+    .kpi-card.kpi-green {
+      border-left-color: var(--dc-accent-green);
+    }
+
+    .kpi-card.kpi-orange {
+      border-left-color: var(--dc-accent-orange);
+    }
+
+    .kpi-card.kpi-teal {
+      border-left-color: var(--dc-accent-teal);
+    }
+
+    /* ---------- Toolbar ---------- */
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .btn-dc-primary {
+      background: var(--dc-blue);
+      color: #fff;
+      border: 1px solid var(--dc-blue);
+    }
+
+    .btn-dc-primary:hover {
+      background: var(--dc-blue-hover);
+      border-color: var(--dc-blue-hover);
+      color: #fff;
+    }
+
+    /* ---------- Filter panel ---------- */
+    .filter-panel {
+      background: #fff;
+      border: 1px solid var(--dc-card-border);
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .filter-panel { display: flex; gap: 10px; align-items: center; }
+    .filter-panel #filterInput { flex: 1; width: auto; }
+
+    .csm-date-input { max-width: 160px; }
+
+    /* Column configurator */
+    .col-hidden { display: none !important; }
+    .columns-config { position: relative; flex-shrink: 0; }
+    .columns-panel {
+      position: absolute; right: 0; top: calc(100% + 6px); z-index: 60;
+      width: 260px; background: #fff; border: 1px solid var(--dc-card-border);
+      border-radius: 6px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.15); padding: 8px;
+    }
+    .columns-panel-title {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; font-weight: 600; padding: 4px 6px 8px;
+    }
+    .columns-panel-hint { font-size: 11px; color: var(--dc-muted); padding: 8px 6px 2px; }
+    #columnsList { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+    #columnsList li {
+      display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 4px;
+      font-size: 13px; cursor: grab; user-select: none;
+    }
+    #columnsList li:hover { background: #f4f6fa; }
+    #columnsList li.dragging { opacity: 0.4; }
+    #columnsList li.locked { cursor: default; color: var(--dc-muted); }
+    #columnsList .col-drag { color: var(--dc-muted); width: 12px; text-align: center; }
+
+    .missing-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .missing-card {
+      background: #fff;
+      border: 1px solid var(--dc-card-border);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .missing-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--dc-table-header);
+      border-bottom: 1px solid var(--dc-card-border);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dc-text);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .missing-card-header:hover {
+      background: #e6ebf2;
+    }
+
+    .missing-card-header .toggle {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--dc-card-border);
+      border-radius: 3px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--dc-muted);
+      background: #fff;
+      line-height: 1;
+    }
+
+    .missing-card.collapsed .missing-card-header {
+      border-bottom-color: transparent;
+    }
+
+    .missing-card.collapsed .missing-card-header .toggle::before {
+      content: '+';
+    }
+
+    .missing-card:not(.collapsed) .missing-card-header .toggle::before {
+      content: '−';
+    }
+
+    .missing-card.collapsed .table-responsive,
+    .missing-card.collapsed .missing-card-empty {
+      display: none !important;
+    }
+
+    .missing-card-header .bar {
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      border-radius: 2px;
+    }
+
+    .missing-card[data-group="loe"] .missing-card-header .bar {
+      background: var(--dc-accent-red);
+    }
+
+    .missing-card[data-group="csm"] .missing-card-header .bar {
+      background: var(--dc-accent-orange);
+    }
+
+    .missing-card[data-group="sdp"] .missing-card-header .bar {
+      background: var(--dc-accent-purple);
+    }
+
+    .missing-card-header .count {
+      margin-left: auto;
+      font-weight: 400;
+      color: var(--dc-muted);
+      font-size: 13px;
+    }
+
+    .missing-card .table-responsive table {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .missing-card .table-responsive thead {
+      background: var(--dc-table-header);
+    }
+
+    .missing-card .table-responsive thead th {
+      color: var(--dc-text);
+      font-weight: 600;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--dc-card-border);
+    }
+
+    .missing-card .table-responsive tbody td {
+      padding: 9px 12px;
+      border-top: 1px solid #eef1f6;
+      vertical-align: middle;
+    }
+
+    .missing-card-export {
+      border: 1px solid var(--dc-card-border);
+      background: #fff;
+      color: var(--dc-text);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
+    .missing-card-export:hover {
+      background: var(--dc-blue);
+      color: #fff;
+      border-color: var(--dc-blue);
+    }
+
+    .missing-card-empty {
+      padding: 14px 16px;
+      color: var(--dc-muted);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    /* ---------- Table card ---------- */
+    .table-card {
+      background: #fff;
+      border: 1px solid var(--dc-card-border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .table-card table {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .table-card thead {
+      background: var(--dc-table-header);
+    }
+
+    .table-card thead th {
+      color: var(--dc-text);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.2px;
+      text-transform: none;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--dc-card-border);
+      vertical-align: middle;
+    }
+
+    .table-card tbody td {
+      padding: 9px 12px;
+      border-top: 1px solid #eef1f6;
+      vertical-align: middle;
+    }
+
+    /* Adjustable column widths — drag the handle on the right edge of each header. */
+    #projectsTable th, #missingCardsContainer th { position: relative; }
+    .col-resizer {
+      position: absolute; top: 0; right: 0; height: 100%; width: 6px;
+      cursor: col-resize; user-select: none; touch-action: none;
+    }
+    .col-resizer:hover,
+    .col-resizer.dragging {
+      background: var(--dc-accent-blue); opacity: 0.5;
+    }
+
+    .table-card tbody tr:hover {
+      background: #f8fafd;
+    }
+
+    /* Project-name deep-link to the linked Salesforce record. */
+    .sf-link {
+      color: inherit;
+      text-decoration: none;
+    }
+    .sf-link:hover {
+      color: var(--dc-blue);
+      text-decoration: underline;
+    }
+    .sf-link-icon {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 11px;
+      opacity: 0.45;
+    }
+    .sf-link:hover .sf-link-icon {
+      opacity: 1;
+      color: var(--dc-blue);
+    }
+
+    .loe-link {
+      color: var(--dc-blue);
+      text-decoration: none;
+      cursor: pointer;
+      border-bottom: 1px dotted currentColor;
+    }
+    .loe-link:hover { text-decoration: none; border-bottom-style: solid; }
+
+    .ws-trigger {
+      cursor: pointer;
+      border-bottom: 1px dotted var(--dc-muted);
+      color: var(--dc-text);
+    }
+    .ws-trigger:hover {
+      color: var(--dc-blue);
+      border-bottom-color: var(--dc-blue);
+    }
+
+    /* LOE modal content */
+    .loe-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 16px; }
+    .loe-meta span { font-size: 13px; color: #555; }
+    .loe-meta strong { color: #222; }
+    .loe-section-title {
+      font-size: 15px; font-weight: 600; margin: 18px 0 8px;
+      padding-bottom: 4px; border-bottom: 2px solid var(--dc-blue);
+    }
+    .loe-narrative { font-size: 13px; margin: 0 0 8px; }
+    .loe-narrative .lbl { color: #777; font-weight: 600; }
+    table.loe-activities { width: 100%; font-size: 13px; }
+    table.loe-activities th { text-align: left; color: #777; font-weight: 600; padding: 4px 8px; }
+    table.loe-activities td { padding: 4px 8px; vertical-align: top; border-top: 1px solid #eee; }
+    table.loe-activities td.loe-act-name { font-weight: 600; white-space: nowrap; }
+    table.loe-activities td.loe-act-val { text-align: center; width: 60px; }
+    .loe-empty { color: #777; font-style: italic; }
+
+    .table-card.hide-sdp .col-sdp-status {
+      display: none;
+    }
+
+    /* Row tinting by priority — Urgent = red, High = yellow, everything else = no tint. */
+    tr.row-critical { background: #fde8e8; }
+    tr.row-critical:hover { background: #fbdada !important; }
+    tr.row-warning  { background: #fff5cc; }
+    tr.row-warning:hover  { background: #ffeca8 !important; }
+
+    /* Priority selector — colored pill that matches the chosen value */
+    .status-select {
+      font-size: 12px;
+      padding: 2px 6px;
+      min-width: 160px;
+      max-width: 220px;
+    }
+    .status-select:disabled { opacity: 0.6; cursor: wait; }
+
+    .delivery-status-select {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1px solid var(--dc-card-border);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 22px 3px 10px;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23475569' d='M0 0l5 6 5-6z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      background-color: #fff;
+      color: var(--dc-text);
+      min-width: 90px;
+    }
+    .delivery-status-select:hover    { border-color: var(--dc-blue); }
+    .delivery-status-select:disabled { opacity: 0.6; cursor: wait; }
+    .delivery-status-select.ds-active      { background-color: #e8f5ec; border-color: #b6dcc1; color: #1d6f3d; }
+    .delivery-status-select.ds-blocked     { background-color: #fff4e0; border-color: #f7c87a; color: #8a5a00; }
+    .delivery-status-select.ds-onhold      { background-color: #fdecec; border-color: #f0a8a8; color: #a02525; }
+    .delivery-status-select.ds-none        { color: var(--dc-muted); }
+
+    .priority-select {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1px solid var(--dc-card-border);
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 22px 3px 10px;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23475569' d='M0 0l5 6 5-6z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      background-color: #fff;
+      color: var(--dc-text);
+    }
+    .priority-select:hover    { border-color: var(--dc-blue); }
+    .priority-select:disabled { opacity: 0.6; cursor: wait; }
+
+    .priority-select.priority-none   { color: var(--dc-muted); background-color: #fff; }
+    .priority-select.priority-low    { background-color: #e8f5ec; border-color: #b6dcc1; color: #1d6f3d; }
+    .priority-select.priority-high   { background-color: #fff4e0; border-color: #f7c87a; color: #8a5a00; }
+    .priority-select.priority-urgent { background-color: #fdecec; border-color: #f0a8a8; color: #a02525; }
+
+    /* Read-only priority display — same visual as the dropdown but a plain span. */
+    .priority-readonly {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--dc-card-border);
+      font-size: 12px;
+      font-weight: 500;
+      background: #fff;
+    }
+    .priority-readonly.priority-none   { color: var(--dc-muted); }
+    .priority-readonly.priority-low    { background-color: #e8f5ec; border-color: #b6dcc1; color: #1d6f3d; }
+    .priority-readonly.priority-high   { background-color: #fff4e0; border-color: #f7c87a; color: #8a5a00; }
+    .priority-readonly.priority-urgent { background-color: #fdecec; border-color: #f0a8a8; color: #a02525; }
+
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th.sortable:hover {
+      background-color: #e6ebf2;
+    }
+
+    th.sortable::after {
+      content: ' ▲▼';
+      opacity: 0.35;
+      font-size: 9px;
+      margin-left: 2px;
+    }
+
+    th.asc::after {
+      content: ' ▲';
+      opacity: 1;
+      color: var(--dc-blue);
+    }
+
+    th.desc::after {
+      content: ' ▼';
+      opacity: 1;
+      color: var(--dc-blue);
+    }
+
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--dc-muted);
+      border-top: 1px solid var(--dc-card-border);
+      background: #fafbfd;
+    }
+
+    /* ---------- Misc ---------- */
+    .no-match {
+      text-align: center;
+      color: var(--dc-muted);
+      padding: 16px;
+    }
+
+    .modal-header {
+      background: var(--dc-table-header);
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 1400px) {
+      .kpi-row {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .kpi-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        padding: 16px;
+      }
+
+      .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <!-- ============ Sidebar ============ -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo">digicert<span class="dot">°</span>ONE</div>
+        <div class="sublabel">Professional Services</div>
+      </div>
+
+      <div class="sidebar-regions">
+        {% for r in regions %}
+        <a class="region-pill {{ 'active' if active_region == r else '' }}"
+           href="/?region={{ r }}">{{ r }}</a>
+        {% endfor %}
+      </div>
+
+      {% if current_user.role in ['Manager', 'Project Manager'] %}
+      <div class="sidebar-nav">
+        <a href="#" data-section="assignment"       onclick="applySection('assignment');return false;"><span class="nav-icon">📋</span> Assignment</a>
+        <a href="#" data-section="scheduling"       onclick="applySection('scheduling');return false;"><span class="nav-icon">📅</span> Scheduling</a>
+        <a href="#" data-section="reviews"          onclick="applySection('reviews');return false;"><span class="nav-icon">🚦</span> Reviews</a>
+        <a href="#" data-section="consultantReview" onclick="applySection('consultantReview');return false;"><span class="nav-icon">👤</span> Consultant Reviews</a>
+      </div>
+      {% endif %}
+
+      <div class="sidebar-actions sidebar-actions-bottom">
+        <button type="button" id="refreshBtn" onclick="refreshProjects()">
+          <span class="nav-icon">↻</span>
+          Refresh Projects
+        </button>
+        {% if current_user.role == 'Manager' %}
+        <a href="/settings">
+          <span class="nav-icon">⚙</span>
+          Settings
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="last-refresh" id="lastRefresh" data-fetched-at="{{ fetched_at }}">Last refreshed: —</div>
+        <div class="version">v1.0 &nbsp;·&nbsp; © 2026 DigiCert, Inc.</div>
+      </div>
+    </aside>
+
+    <!-- ============ Main ============ -->
+    <main class="main">
+      <!-- Top bar -->
+      <div class="topbar">
+        <h1 class="page-title">RocketLane Projects — {{ active_region }} ({{ projects|length }})</h1>
+        <div class="topbar-right">
+          <span class="user-name">{{ user.name }}</span>
+          <span>({{ user.email }})</span>
+          <span class="admin-badge">{{ current_user.role }}</span>
+          <a href="/logout">Sign out</a>
+        </div>
+      </div>
+
+
+      <!-- KPI tiles — shown contextually based on active sidebar section. -->
+      <div class="kpi-row" id="kpiRow">
+        <div class="kpi-card kpi-red"    data-section="assignment" data-preset="missing"          onclick="applyPreset('missing')">
+          <div class="label">Missing Prerequisites</div>
+          <div class="value">{{ tiles.missing.count }}</div>
+          <div class="arr">{{ tiles.missing.arr_display }}</div>
+        </div>
+        <div class="kpi-card kpi-blue"   data-section="assignment" data-preset="sdp"              onclick="applyPreset('sdp')">
+          <div class="label">SDP Assignment</div>
+          <div class="value">{{ tiles.sdp.count }}</div>
+          <div class="arr">{{ tiles.sdp.arr_display }}</div>
+        </div>
+        <div class="kpi-card kpi-green"  data-section="assignment" data-preset="internal"         onclick="applyPreset('internal')">
+          <div class="label">Internal Assignment</div>
+          <div class="value">{{ tiles.internal.count }}</div>
+          <div class="arr">{{ tiles.internal.arr_display }}</div>
+        </div>
+        <div class="kpi-card kpi-orange" data-section="scheduling" data-preset="readyForKickoff"  onclick="applyPreset('readyForKickoff')">
+          <div class="label">Ready for Kick-Off</div>
+          <div class="value">{{ tiles.ready.count }}</div>
+          <div class="arr">{{ tiles.ready.arr_display }}</div>
+        </div>
+        <div class="kpi-card kpi-teal"   data-section="scheduling" data-preset="kickoffScheduled" onclick="applyPreset('kickoffScheduled')">
+          <div class="label">Kick-off Meeting Scheduled</div>
+          <div class="value">{{ tiles.kos.count }}</div>
+          <div class="arr">{{ tiles.kos.arr_display }}</div>
+        </div>
+        <div class="kpi-card kpi-orange" data-section="reviews"    data-preset="blockedCustomer"  onclick="applyPreset('blockedCustomer')">
+          <div class="label">Blocked — Waiting on Customer</div>
+          <div class="value">{{ tiles.blocked_customer.count }}</div>
+          <div class="arr">{{ tiles.blocked_customer.arr_display }}</div>
+        </div>
+        <div class="kpi-card kpi-red"    data-section="reviews"    data-preset="blockedDigiCert"  onclick="applyPreset('blockedDigiCert')">
+          <div class="label">Blocked — Waiting on DigiCert</div>
+          <div class="value">{{ tiles.blocked_digicert.count }}</div>
+          <div class="arr">{{ tiles.blocked_digicert.arr_display }}</div>
+        </div>
+        <div class="kpi-card kpi-purple" data-section="reviews"    data-preset="onHold"           onclick="applyPreset('onHold')">
+          <div class="label">On-Hold</div>
+          <div class="value">{{ tiles.onhold.count }}</div>
+          <div class="arr">{{ tiles.onhold.arr_display }}</div>
+        </div>
+      </div>
+
+      {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+      <!-- Filter panel -->
+      <div class="filter-panel">
+        <input type="text" id="filterInput" class="form-control form-control-sm"
+          placeholder="Filter projects by name, package, date…" oninput="filterProjects()">
+        <div class="columns-config">
+          <button type="button" id="columnsBtn" class="btn btn-sm btn-outline-secondary">⚙ Columns</button>
+          <div id="columnsPanel" class="columns-panel d-none">
+            <div class="columns-panel-title">
+              <span id="columnsPanelView">Columns</span>
+              <button type="button" id="columnsReset" class="btn btn-link btn-sm p-0">Reset</button>
+            </div>
+            <ul id="columnsList"></ul>
+            <div class="columns-panel-hint">Layout is per view · drag to reorder · Project Name is fixed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consultant Review view (Managers / PMs only, activated via sidebar) -->
+      <div id="consultantReviewContainer" class="d-none">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h6 class="mb-0 fw-semibold">Consultant Reviews</h6>
+          <select id="consultantSelect" class="form-select form-select-sm" style="width:220px;">
+            <option value="">— Select a consultant —</option>
+          </select>
+        </div>
+        <div id="consultantReviewGroups"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle" id="projectsTable">
+            <thead>
+              <tr>
+                <th data-key="name">Project Name</th>
+                <th data-key="links">Links</th>
+                <th data-key="package">Package Name</th>
+                <th class="sortable" data-key="arr" data-sort-key="arrValue">ARR</th>
+                <th class="sortable" data-key="segment">Segment</th>
+                <th class="sortable" data-key="delta_price">Delta Price (Hourly)</th>
+                <th class="sortable" data-key="sub_region">Account Sub-Region</th>
+                <th class="sortable" data-key="close_date">Close Date</th>
+                <th class="sortable" data-key="due_date">Due Date</th>
+                <th class="sortable" data-key="csm">CSM Handover Date</th>
+                <th class="sortable col-sdp-status" data-key="sdp">SDP Status</th>
+                <th class="sortable col-loe-status" data-key="loe">LOE Status</th>
+                <th data-key="priority">Priority</th>
+                <th data-key="status">Status</th>
+                <th data-key="delivery_status">Delivery Status</th>
+                <th data-key="weekly_status">Weekly Status Update</th>
+              </tr>
+            </thead>
+            <tbody id="mainTbody">
+              {% for p in projects %}
+              {% set row_cls = 'row-critical' if p.priority == 'Urgent' else ('row-warning' if p.priority == 'High' else '') %}
+              <tr class="project-row {{ row_cls }}" data-original-index="{{ loop.index0 }}"
+                data-archived="{{ 'true' if p.archived else 'false' }}" data-status="{{ p.status }}"
+                data-delivery-status="{{ p.delivery_status }}"
+                data-sdp-consent-required="{{ p.sdp_consent_required }}"
+                data-level-of-effort-status="{{ p.level_of_effort_status }}"
+                data-arr-value="{{ p.arr_value }}">
+                <td data-key="name">{{ p.name }}</td>
+                <td data-key="links">
+                  <div class="d-flex gap-1 align-items-center flex-wrap">
+                    {% if p.salesforce_url %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ p.salesforce_url }}"
+                       target="_blank" rel="noopener noreferrer" title="View in Salesforce" aria-label="Salesforce">
+                      <i class="bi bi-cloud-fill" style="color: #00A1E0;"></i>
+                    </a>
+                    {% endif %}
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ p.rocketlane_url }}"
+                       target="_blank" rel="noopener noreferrer" title="View in Rocketlane" aria-label="Rocketlane">
+                      <i class="bi bi-rocket-takeoff-fill" style="color: #6366f1;"></i>
+                    </a>
+                    {% if p.internal_ready and p.status not in ['Ready for Kick-Off', 'Kick-off Meeting Scheduled'] %}
+                    <button class="btn btn-sm btn-outline-primary assign-btn" data-id="{{ p.id }}"
+                      data-name="{{ p.name }}" data-sub-region="{{ p.sub_region }}"
+                      data-salesforce-url="{{ p.salesforce_url or '' }}">Assign</button>
+                    {% endif %}
+                  </div>
+                </td>
+                <td data-key="package">{{ p.package_name }}</td>
+                <td data-key="arr">{{ p.arr }}</td>
+                <td data-key="segment">{{ p.segment }}</td>
+                <td data-key="delta_price">{{ p.delta_price }}</td>
+                <td data-key="sub_region">{{ p.sub_region }}</td>
+                <td data-key="close_date">{{ p.close_date }}</td>
+                <td data-key="due_date">{{ p.due_date }}</td>
+                <td data-key="csm">
+                  {% if current_user.role in ['Manager', 'Project Manager'] and (not p.csm_handover_date or p.csm_handover_date == '-') %}
+                  <input type="date" class="csm-date-input form-control form-control-sm" data-id="{{ p.id }}"
+                         aria-label="Set CSM Handover Date">
+                  {% else %}{{ p.csm_handover_date }}{% endif %}
+                </td>
+                <td class="col-sdp-status" data-key="sdp">{{ p.sdp_status }}</td>
+                <td class="col-loe-status" data-key="loe">
+                  {% if p.loe_display in ('Draft', 'Complete') %}
+                  <a href="#" class="loe-link" data-id="{{ p.id }}" data-name="{{ p.name }}" title="View Level of Effort details">{{ p.loe_display }}</a>
+                  {% else %}
+                  <span style="color: var(--dc-muted)">—</span>
+                  {% endif %}
+                </td>
+                <td data-key="priority">
+                  {% if current_user.role in ['Manager', 'Project Manager'] %}
+                  <select class="priority-select priority-{{ p.priority|lower if p.priority != '-' else 'none' }}"
+                          data-id="{{ p.id }}">
+                    <option value=""       {% if p.priority == '-'      %}selected{% endif %}>—</option>
+                    <option value="Low"    {% if p.priority == 'Low'    %}selected{% endif %}>Low</option>
+                    <option value="High"   {% if p.priority == 'High'   %}selected{% endif %}>High</option>
+                    <option value="Urgent" {% if p.priority == 'Urgent' %}selected{% endif %}>Urgent</option>
+                  </select>
+                  {% else %}
+                  <span class="priority-readonly priority-{{ p.priority|lower if p.priority != '-' else 'none' }}">
+                    {{ p.priority if p.priority != '-' else '—' }}
+                  </span>
+                  {% endif %}
+                </td>
+                <td data-key="status">
+                  {% if current_user.role in ['Manager', 'Project Manager'] %}
+                  <select class="status-select form-select form-select-sm" data-id="{{ p.id }}">
+                    {% for val, lbl in manager_status_options %}
+                    <option value="{{ val }}" {% if p.status_value == val %}selected{% endif %}>{{ lbl }}</option>
+                    {% endfor %}
+                  </select>
+                  {% else %}
+                  {{ p.status }}
+                  {% endif %}
+                </td>
+                <td data-key="delivery_status">
+                  {% set ds = p.delivery_status %}
+                  {% if ds == 'Active' %}{% set ds_cls = 'ds-active' %}
+                  {% elif ds in ['Blocked - Waiting on Customer', 'Blocked - Waiting on DigiCert'] %}{% set ds_cls = 'ds-blocked' %}
+                  {% elif ds == 'On-Hold' %}{% set ds_cls = 'ds-onhold' %}
+                  {% else %}{% set ds_cls = 'ds-none' %}{% endif %}
+                  <select class="delivery-status-select {{ ds_cls }}" data-id="{{ p.id }}">
+                    <option value="" {% if not ds %}selected{% endif %}>—</option>
+                    <option value="Active"                          {% if ds == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Blocked - Waiting on Customer"   {% if ds == 'Blocked - Waiting on Customer' %}selected{% endif %}>Blocked - Waiting on Customer</option>
+                    <option value="Blocked - Waiting on DigiCert"   {% if ds == 'Blocked - Waiting on DigiCert' %}selected{% endif %}>Blocked - Waiting on DigiCert</option>
+                    <option value="On-Hold"                         {% if ds == 'On-Hold' %}selected{% endif %}>On-Hold</option>
+                  </select>
+                </td>
+                <td data-key="weekly_status" data-project-id="{{ p.id }}">
+                  {% if p.weekly_status_full %}
+                  <span class="ws-trigger">{{ p.weekly_status }}</span>
+                  {% else %}
+                  <span class="ws-trigger-none">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+
+              {% if not projects %}
+              <tr>
+                <td colspan="13" class="text-center text-muted">
+                  No projects returned.
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        <p id="noMatchMsg" class="no-match d-none">No projects match your filter.</p>
+      </div>
+
+      <!-- Missing Prerequisites view — hidden until that preset is active -->
+      <div id="missingCardsContainer" class="missing-cards d-none">
+        {% set cols = 12 %}
+        {% for group_id, title in [('loe', 'Missing LOE'), ('csm', 'Missing CSM Handover'), ('sdp', 'SDP Approval')] %}
+        <div class="missing-card" data-group="{{ group_id }}">
+          <div class="missing-card-header">
+            <span class="bar"></span>
+            <span>{{ title }}</span>
+            <span class="count" data-count>0 projects</span>
+            <button class="missing-card-export"
+                    onclick="event.stopPropagation(); exportBacklog('{{ group_id }}')">↓ Export</button>
+            <span class="toggle" aria-hidden="true"></span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th class="sortable" data-key="name">Project Name</th>
+                  <th data-key="links">Links</th>
+                  <th class="sortable" data-key="package">Package Name</th>
+                  <th class="sortable" data-key="arr" data-sort-key="arrValue">ARR</th>
+                  <th class="sortable" data-key="segment">Segment</th>
+                  <th class="sortable" data-key="delta_price">Delta Price (Hourly)</th>
+                  <th class="sortable" data-key="sub_region">Account Sub-Region</th>
+                  <th class="sortable" data-key="close_date">Close Date</th>
+                  <th class="sortable" data-key="due_date">Due Date</th>
+                  <th class="sortable" data-key="csm">CSM Handover Date</th>
+                  <th class="sortable col-sdp-status" data-key="sdp">SDP Status</th>
+                  <th class="sortable col-loe-status" data-key="loe">LOE Status</th>
+                  <th class="sortable" data-key="priority" data-sort-key="priority">Priority</th>
+                  <th data-key="delivery_status">Delivery Status</th>
+                  <th data-key="weekly_status">Weekly Status Update</th>
+                </tr>
+              </thead>
+              <tbody data-group="{{ group_id }}"></tbody>
+            </table>
+          </div>
+          <div class="missing-card-empty d-none" data-empty>No projects in this group.</div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+
+  <!-- Assign Modal -->
+  <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="assignModalLabel">Assign Consultant</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-2">Project: <strong id="assignProjectName">—</strong></p>
+          <p class="text-muted small mb-3">
+            The consultant becomes the project owner; the project manager is kept on the project;
+            any other previous owner is removed. Status is set to <em>Ready For Kick-Off</em>.
+          </p>
+          <div class="mb-3">
+            <label for="assignConsultantSelect" class="form-label">Lead Consultant</label>
+            <select id="assignConsultantSelect" class="form-select">
+              <option value="">Loading consultants…</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="assignPmSelect" class="form-label">Project Manager</label>
+            <select id="assignPmSelect" class="form-select">
+              <option value="">Loading…</option>
+            </select>
+          </div>
+          <hr class="my-2">
+          <div class="mb-1">
+            <div class="d-flex justify-content-between align-items-baseline mb-2">
+              <label class="form-label mb-0 fw-semibold">Technical Contact</label>
+              <span id="techContactStatus" class="text-muted small">Loading…</span>
+            </div>
+            <div id="assignSalesforceLink" class="mb-2 d-none">
+              <a id="assignSalesforceAnchor" href="#" target="_blank" rel="noopener noreferrer"
+                class="small text-decoration-none">
+                <i class="bi bi-cloud-fill me-1" style="color:#00A1E0;"></i>Open in Salesforce
+              </a>
+            </div>
+            <div class="mb-2">
+              <input type="text" id="techContactName" class="form-control form-control-sm"
+                placeholder="Name" aria-label="Technical contact name">
+            </div>
+            <div>
+              <input type="email" id="techContactEmail" class="form-control form-control-sm"
+                placeholder="Email" aria-label="Technical contact email">
+            </div>
+          </div>
+          <div id="assignError" class="text-danger mt-2 d-none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-dc-primary" id="assignSubmitBtn" disabled>Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- LOE Details Modal -->
+  <div class="modal fade" id="loeModal" tabindex="-1" aria-labelledby="loeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="loeModalLabel">Level of Effort — <span id="loeModalTitle">—</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="loeModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Status Modal -->
+  <div class="modal fade" id="wsModal" tabindex="-1" aria-labelledby="wsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="wsModalLabel">Weekly Status — <span id="wsModalTitle">—</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="wsModalDate" class="text-muted small mb-2" style="display:none;"></p>
+          <div id="wsModalBody" style="white-space: pre-wrap; font-size: 13px;"></div>
+          <hr class="my-3">
+          <label class="form-label fw-semibold small mb-1">Add Status Update</label>
+          <textarea id="wsUpdateText" class="form-control" rows="3" placeholder="Enter status update…"></textarea>
+          <div id="wsUpdateError" class="text-danger mt-2 d-none small"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-dc-primary" id="wsUpdateSubmitBtn" disabled>Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WEEKLY_STATUS_DATA = {{ weekly_status_map | tojson }};
+
+    const table = document.getElementById('projectsTable');
+    const tbody = table.querySelector('tbody');
+
+    const CURRENT_ROLE      = "{{ current_user.role }}";
+    const CURRENT_USER_NAME = "{{ user.name }}";
+    const ACTIVE_REGION     = "{{ active_region }}";
+
+    // Cells are addressed by stable data-key (not position) so columns can be reordered/hidden.
+    const cellByKey = (row, key) => row.querySelector('td[data-key="' + key + '"]');
+
+    let activePreset = null;
+
+    const mainTableCard            = document.querySelector('.table-card');
+    const missingContainer         = document.getElementById('missingCardsContainer');
+    const consultantReviewContainer = document.getElementById('consultantReviewContainer');
+
+    // Which sidebar section owns each preset.
+    const PRESET_SECTION = {
+      missing: 'assignment', sdp: 'assignment', internal: 'assignment',
+      readyForKickoff: 'scheduling', kickoffScheduled: 'scheduling',
+      onHold: 'reviews', blockedCustomer: 'reviews', blockedDigiCert: 'reviews',
+      consultantReview: 'consultantReview',
+    };
+    // Default preset to activate when a section is first selected.
+    const SECTION_DEFAULT_PRESET = {
+      assignment: 'missing',
+      scheduling: 'readyForKickoff',
+      reviews:    'onHold',
+    };
+    const kpiRow = document.getElementById('kpiRow');
+    const cardTbodies = {
+      loe: missingContainer.querySelector('tbody[data-group="loe"]'),
+      csm: missingContainer.querySelector('tbody[data-group="csm"]'),
+      sdp: missingContainer.querySelector('tbody[data-group="sdp"]'),
+    };
+
+    missingContainer.querySelectorAll('.missing-card-header').forEach(h => {
+      h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed'));
+    });
+
+    function allProjectRows() {
+      return document.querySelectorAll('tr.project-row');
+    }
+
+    function applyPreset(name) {
+      const wasMissing = activePreset === 'missing';
+      activePreset = name;
+      try { localStorage.setItem('rl_active_preset', name); } catch (_) {}
+      // Keep the KPI tiles in sync with the active preset.
+      document.querySelectorAll('.kpi-card[data-preset]').forEach(c => {
+        c.classList.toggle('active', activePreset === c.dataset.preset);
+      });
+      // Highlight the active sidebar section.
+      const activeSection = PRESET_SECTION[name] || null;
+      document.querySelectorAll('.sidebar-nav a[data-section]').forEach(a => {
+        a.classList.toggle('active', a.dataset.section === activeSection);
+      });
+      // Show only tiles that belong to the active section.
+      document.querySelectorAll('.kpi-card[data-section]').forEach(c => {
+        c.style.display = (c.dataset.section === activeSection) ? '' : 'none';
+      });
+      kpiRow.style.display = (activeSection === 'consultantReview') ? 'none' : '';
+
+      if (wasMissing && activePreset !== 'missing') restoreToMainTable();
+      if (activePreset === 'missing') splitRowsIntoCards();
+
+      const isConsultantReview = (activePreset === 'consultantReview');
+      if (isConsultantReview) ensureConsultantsLoaded();
+
+      // Toggle which view is visible.
+      consultantReviewContainer.classList.toggle('d-none', !isConsultantReview);
+      mainTableCard.classList.toggle('d-none', activePreset === 'missing' || isConsultantReview);
+      missingContainer.classList.toggle('d-none', activePreset !== 'missing');
+
+      // Hide the SDP Status column for assignment-style, kick-off, and blocked/on-hold views.
+      // The LOE column stays visible everywhere so its details link is always reachable.
+      const hideSdp = ['sdp', 'internal', 'readyForKickoff', 'kickoffScheduled',
+                       'onHold', 'blockedCustomer', 'blockedDigiCert'].includes(activePreset);
+      mainTableCard.classList.toggle('hide-sdp', hideSdp);
+
+      if (!isConsultantReview) {
+        applyLayout();   // re-apply user column order/visibility (covers freshly-cloned card rows)
+        filterProjects();
+      }
+    }
+
+    function failingChecks(row) {
+      // Every backlog bucket the row qualifies for. A project missing both LOE and CSM appears
+      // in BOTH the Missing LOE and Missing CSM Handover cards. Card counts reflect
+      // qualifying-per-prereq, not unique-project totals.
+      const loeCell = cellByKey(row, 'loe')?.textContent.trim();
+      const csmCell = cellByKey(row, 'csm')?.textContent.trim();
+      const sdpCell = cellByKey(row, 'sdp')?.textContent.trim();
+      const loeOk = loeCell === 'Complete';
+      const csmOk = csmCell && csmCell !== '-';
+      const sdpOk = (sdpCell === 'Approved') || (sdpCell === 'Consent Required');
+      const groups = [];
+      if (!loeOk) groups.push('loe');
+      if (!csmOk) groups.push('csm');
+      if (!sdpOk) groups.push('sdp');
+      return groups;
+    }
+
+    function splitRowsIntoCards() {
+      // Clone each Proposed project into every card where one of its prereqs is missing.
+      // Originals stay in the main tbody (hidden via d-none on mainTableCard in Backlog view).
+      // Clones carry the .backlog-clone class so restoreToMainTable can remove them cleanly.
+      Array.from(tbody.querySelectorAll('tr.project-row')).forEach(row => {
+        if (row.dataset.status !== 'Proposed') return;
+        failingChecks(row).forEach(g => {
+          const clone = row.cloneNode(true);
+          clone.classList.add('backlog-clone');
+          cardTbodies[g].appendChild(clone);
+        });
+      });
+    }
+
+    function restoreToMainTable() {
+      // Originals were never moved — just drop the clones.
+      document.querySelectorAll('tr.backlog-clone').forEach(c => c.remove());
+    }
+
+    function filterProjects() {
+      const query = document.getElementById('filterInput').value.toLowerCase();
+      const rows = Array.from(allProjectRows());
+
+      let visibleCount = 0;
+      const visibleByGroup = { loe: 0, csm: 0, sdp: 0 };
+
+      rows.forEach(row => {
+        const textMatch = row.textContent.toLowerCase().includes(query);
+        const loeCell = cellByKey(row, 'loe')?.textContent.trim();
+
+        let presetMatch = true;
+        const status = row.dataset.status;
+        const ds     = row.dataset.deliveryStatus || '';
+        if (activePreset === 'readyForKickoff') {
+          presetMatch = status === 'Ready for Kick-Off';
+        } else if (activePreset === 'kickoffScheduled') {
+          presetMatch = status === 'Kick-off Meeting Scheduled';
+        } else if (activePreset === 'onHold') {
+          presetMatch = ds === 'On-Hold' || status === 'On Hold';
+        } else if (activePreset === 'blockedCustomer') {
+          presetMatch = ds === 'Blocked - Waiting on Customer' || status === 'Blocked - Waiting on Customer';
+        } else if (activePreset === 'blockedDigiCert') {
+          presetMatch = ds === 'Blocked - Waiting on DigiCert' || status === 'Blocked - Waiting on DigiCert';
+        } else if (activePreset === 'sdp' || activePreset === 'internal') {
+          // Both presets require: Status=Proposed, CSM Handover not empty,
+          // (LOE Status = Uploaded OR Level of Effort Status = Complete).
+          // SDP Assignments adds: SDP Consent Required = No OR SDP Status = Approved.
+          const csmCell = cellByKey(row, 'csm')?.textContent.trim();
+          const sdpCell = cellByKey(row, 'sdp')?.textContent.trim();
+          const consent = row.dataset.sdpConsentRequired;
+          const loeOk = loeCell === 'Complete';
+          const csmOk = !!(csmCell && csmCell !== '-');
+          const proposedOk = status === 'Proposed';
+          const sdpOk = (activePreset === 'internal')
+            ? true
+            : (consent === 'No' || sdpCell === 'Approved');
+          presetMatch = proposedOk && csmOk && loeOk && sdpOk;
+
+        }
+        // In 'missing' mode, the row only counts as visible if it's actually inside one of the
+        // card tbodys (i.e. it had a missing reason). Rows that fell back to the main tbody are
+        // hidden along with the main table-card itself.
+        const inCard = row.parentElement !== tbody;
+
+        const match = textMatch && presetMatch;
+        row.style.display = match ? '' : 'none';
+        if (match) {
+          visibleCount++;
+          if (activePreset === 'missing' && inCard) {
+            visibleByGroup[row.parentElement.dataset.group]++;
+          }
+        }
+      });
+
+      // Per-card count + empty-state updates (only meaningful in 'missing' mode).
+      ['loe', 'csm', 'sdp'].forEach(g => {
+        const card = missingContainer.querySelector(`.missing-card[data-group="${g}"]`);
+        const count = visibleByGroup[g];
+        card.querySelector('[data-count]').textContent = `${count} project${count === 1 ? '' : 's'}`;
+        card.querySelector('[data-empty]').classList.toggle('d-none', count > 0);
+      });
+      document.getElementById('noMatchMsg').classList.toggle('d-none', visibleCount > 0);
+    }
+
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        // Sort state is per-table so the main table and each backlog card sort independently.
+        const tableEl = th.closest('table');
+        const tbodyEl = tableEl.querySelector('tbody');
+        const key = th.dataset.key;
+        const sortKey = th.dataset.sortKey;
+        const currentlyAsc = th.classList.contains('asc');
+        const newAsc = !currentlyAsc;
+        tableEl.querySelectorAll('th.sortable').forEach(t => t.classList.remove('asc', 'desc'));
+        th.classList.add(newAsc ? 'asc' : 'desc');
+        const rows = Array.from(tbodyEl.querySelectorAll('tr.project-row'));
+        const priorityRank = { 'Urgent': 0, 'High': 1, 'Low': 2 };
+        const priorityOf = row => {
+          const sel = row.querySelector('.priority-select');
+          return priorityRank[sel ? sel.value : ''] ?? 3;
+        };
+        rows.sort((a, b) => {
+          if (sortKey === 'arrValue') {
+            const av = parseFloat(a.dataset.arrValue) || 0;
+            const bv = parseFloat(b.dataset.arrValue) || 0;
+            return newAsc ? av - bv : bv - av;
+          }
+          if (sortKey === 'priority') {
+            return newAsc ? priorityOf(a) - priorityOf(b) : priorityOf(b) - priorityOf(a);
+          }
+          const aVal = cellByKey(a, key) ? cellByKey(a, key).textContent.trim() : '';
+          const bVal = cellByKey(b, key) ? cellByKey(b, key).textContent.trim() : '';
+          if (aVal === '-' && bVal === '-') return 0;
+          if (aVal === '-') return newAsc ? 1 : -1;
+          if (bVal === '-') return newAsc ? -1 : 1;
+          return newAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        });
+        rows.forEach(row => tbodyEl.appendChild(row));
+      });
+    });
+
+    function refreshProjects() {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.textContent = 'Refreshing...';
+      window.location.href = `/?refresh=1&region=${encodeURIComponent(ACTIVE_REGION)}`;
+    }
+
+    function exportBacklog(group) {
+      window.location.href = `/export-backlog/${group}?region=${encodeURIComponent(ACTIVE_REGION)}`;
+    }
+
+    // ---------- Last refreshed (relative time from the cache's fetched_at) ----------
+    (function () {
+      const el = document.getElementById('lastRefresh');
+      const secs = parseFloat(el?.dataset.fetchedAt || '0');
+      if (!el) return;
+      function render() {
+        if (!secs) { el.textContent = 'Last refreshed: —'; return; }
+        const age = Math.max(0, Math.floor(Date.now() / 1000 - secs));
+        let rel;
+        if (age < 10)        rel = 'just now';
+        else if (age < 60)   rel = `${age} seconds ago`;
+        else if (age < 3600) { const m = Math.floor(age / 60); rel = `${m} minute${m === 1 ? '' : 's'} ago`; }
+        else if (age < 86400){ const h = Math.floor(age / 3600); rel = `${h} hour${h === 1 ? '' : 's'} ago`; }
+        else                 { const d = Math.floor(age / 86400); rel = `${d} day${d === 1 ? '' : 's'} ago`; }
+        el.textContent = `Last refreshed: ${rel}`;
+      }
+      render();
+      setInterval(render, 30000);
+    })();
+
+    // ---------- Adjustable column widths (drag header edges; shared across the main table and
+    //            the Missing Prerequisites card tables, keyed by column data-key, persisted) ----------
+    const COL_TABLES = [
+      document.getElementById('projectsTable'),
+      ...document.querySelectorAll('#missingCardsContainer table'),
+    ].filter(Boolean);
+
+    (function () {
+      if (!COL_TABLES.length) return;
+
+      const KEY = 'projectsTableColWidths';
+      let widths = {};
+      try { widths = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { widths = {}; }
+      const save = () => { try { localStorage.setItem(KEY, JSON.stringify(widths)); } catch (e) {} };
+
+      // Apply a width to the column with this data-key in every table so they stay consistent.
+      function applyWidth(colKey, w) {
+        COL_TABLES.forEach(t => {
+          const th = t.querySelector('thead th[data-key="' + colKey + '"]');
+          if (th) th.style.width = w + 'px';
+        });
+      }
+
+      Object.keys(widths).forEach(k => applyWidth(k, widths[k]));
+
+      COL_TABLES.forEach(t => {
+        t.querySelectorAll('thead th[data-key]').forEach(th => {
+          const colKey = th.dataset.key;
+          const handle = document.createElement('span');
+          handle.className = 'col-resizer';
+          th.appendChild(handle);
+
+          handle.addEventListener('click', (e) => e.stopPropagation());   // don't trigger sort
+          handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handle.classList.add('dragging');
+            const startX = e.pageX;
+            const startW = th.offsetWidth;
+            const onMove = (ev) => {
+              const w = Math.max(60, startW + (ev.pageX - startX));
+              applyWidth(colKey, w);
+            };
+            const onUp = () => {
+              document.removeEventListener('mousemove', onMove);
+              document.removeEventListener('mouseup', onUp);
+              handle.classList.remove('dragging');
+              widths[colKey] = th.offsetWidth;
+              save();
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+          });
+        });
+      });
+    })();
+
+    // ---------- Configurable column layout (show/hide + reorder; persisted server-side) ----------
+    const COLUMN_DEFS = [
+      { key: 'name',           label: 'Project Name', locked: true },
+      { key: 'package',        label: 'Package Name' },
+      { key: 'arr',            label: 'ARR' },
+      { key: 'segment',        label: 'Segment' },
+      { key: 'delta_price',    label: 'Delta Price (Hourly)' },
+      { key: 'sub_region',     label: 'Account Sub-Region' },
+      { key: 'close_date',     label: 'Close Date' },
+      { key: 'due_date',       label: 'Due Date' },
+      { key: 'csm',            label: 'CSM Handover Date' },
+      { key: 'sdp',            label: 'SDP Status' },
+      { key: 'loe',            label: 'LOE Status' },
+      { key: 'priority',       label: 'Priority' },
+      { key: 'status',           label: 'Status' },
+      { key: 'delivery_status', label: 'Delivery Status' },
+      { key: 'weekly_status',  label: 'Weekly Status Update' },
+      { key: 'links',          label: 'Links' },   // always rendered last
+    ];
+    const DEF_BY_KEY = Object.fromEntries(COLUMN_DEFS.map(d => [d.key, d]));
+    const SAVED_LAYOUT = {{ column_layout|tojson }};
+
+    // Each view keeps its own layout. SAVED_LAYOUT is a {view: [...]} map (or null).
+    const VIEW_KEYS = ['missing', 'sdp', 'internal', 'readyForKickoff', 'kickoffScheduled',
+                       'onHold', 'blockedCustomer', 'blockedDigiCert'];
+    // Per-view default column sets. Views listed here show only the named columns by default;
+    // views not listed default to showing all columns.
+    const VIEW_DEFAULT_COLS = {
+      missing:         new Set(['name', 'package', 'arr', 'segment', 'loe', 'csm', 'sdp', 'priority', 'weekly_status', 'links']),
+      sdp:             new Set(['name', 'package', 'arr', 'segment', 'loe', 'csm', 'priority', 'weekly_status', 'links']),
+      onHold:          new Set(['name', 'segment', 'package', 'arr', 'due_date', 'delivery_status', 'weekly_status', 'links']),
+      blockedCustomer: new Set(['name', 'segment', 'package', 'arr', 'due_date', 'delivery_status', 'weekly_status', 'links']),
+      blockedDigiCert: new Set(['name', 'segment', 'package', 'arr', 'due_date', 'delivery_status', 'weekly_status', 'links']),
+    };
+    function buildLayout(saved, viewKey) {
+      const out = [], used = new Set();
+      const defaultCols  = VIEW_DEFAULT_COLS[viewKey] || null;
+      const useRestricted = !Array.isArray(saved) && defaultCols !== null;
+      if (Array.isArray(saved)) {
+        saved.forEach(c => {
+          if (DEF_BY_KEY[c.key] && !used.has(c.key) && c.key !== 'name') {
+            used.add(c.key); out.push({ key: c.key, visible: c.visible !== false });
+          }
+        });
+      }
+      COLUMN_DEFS.forEach(d => {
+        if (d.key !== 'name' && !used.has(d.key)) {
+          out.push({ key: d.key, visible: useRestricted ? defaultCols.has(d.key) : true });
+        }
+      });
+      out.unshift({ key: 'name', visible: true });
+      // Always keep 'links' as the last column regardless of saved order.
+      const linksIdx = out.findIndex(c => c.key === 'links');
+      if (linksIdx >= 0 && linksIdx < out.length - 1) {
+        const [linksCol] = out.splice(linksIdx, 1);
+        out.push(linksCol);
+      }
+      return out;
+    }
+    function buildLayouts(saved) {
+      const o = {};
+      const src = (saved && typeof saved === 'object') ? saved : {};
+      VIEW_KEYS.forEach(v => { o[v] = buildLayout(src[v], v); });
+      return o;
+    }
+    let layouts = buildLayouts(SAVED_LAYOUT);
+    const currentView = () => (VIEW_KEYS.indexOf(activePreset) >= 0 ? activePreset : 'missing');
+    const currentLayout = () => layouts[currentView()];
+
+    function applyLayout() {
+      const layout = currentLayout();
+      COL_TABLES.forEach(t => {
+        const headRow = t.tHead && t.tHead.rows[0];
+        if (headRow) layout.forEach(col => {
+          const th = headRow.querySelector('th[data-key="' + col.key + '"]');
+          if (th) { headRow.appendChild(th); th.classList.toggle('col-hidden', !col.visible); }
+        });
+        t.querySelectorAll('tbody tr').forEach(row => {
+          layout.forEach(col => {
+            const td = row.querySelector('td[data-key="' + col.key + '"]');
+            if (td) { row.appendChild(td); td.classList.toggle('col-hidden', !col.visible); }
+          });
+        });
+      });
+    }
+
+    function saveLayout() {
+      fetch('/column-layout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ view: currentView(), layout: currentLayout() }),
+      }).catch(() => {});   // best-effort; server sanitizes
+    }
+
+    (function () {
+      const btn = document.getElementById('columnsBtn');
+      const panel = document.getElementById('columnsPanel');
+      const list = document.getElementById('columnsList');
+      if (!btn || !panel || !list) return;
+
+      function commitOrderFromDom() {
+        const keys = Array.from(list.children).map(li => li.dataset.key);
+        const visByKey = Object.fromEntries(currentLayout().map(c => [c.key, c.visible]));
+        const next = keys.filter(k => k !== 'name').map(k => ({ key: k, visible: visByKey[k] !== false }));
+        next.unshift({ key: 'name', visible: true });
+        layouts[currentView()] = next;
+        applyLayout(); saveLayout();
+      }
+
+      const VIEW_LABELS = {
+        missing: 'Missing Prerequisites', sdp: 'SDP Assignment', internal: 'Internal Assignment',
+        readyForKickoff: 'Ready for Kick-Off', kickoffScheduled: 'Kick-off Meeting Scheduled',
+        onHold: 'On-Hold', blockedCustomer: 'Blocked — Waiting on Customer',
+        blockedDigiCert: 'Blocked — Waiting on DigiCert',
+      };
+      function render() {
+        const viewLabel = document.getElementById('columnsPanelView');
+        if (viewLabel) viewLabel.textContent = 'Columns · ' + (VIEW_LABELS[currentView()] || '');
+        list.innerHTML = '';
+        currentLayout().forEach(col => {
+          const def = DEF_BY_KEY[col.key];
+          if (!def) return;
+          const li = document.createElement('li');
+          li.dataset.key = col.key;
+          if (def.locked) li.classList.add('locked'); else li.draggable = true;
+
+          const handle = document.createElement('span');
+          handle.className = 'col-drag';
+          handle.textContent = def.locked ? '' : '⠿';
+
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = col.visible;
+          cb.disabled = !!def.locked;
+          cb.addEventListener('change', () => { col.visible = cb.checked; applyLayout(); saveLayout(); });
+
+          const label = document.createElement('span');
+          label.textContent = def.label;
+
+          li.append(handle, cb, label);
+          if (!def.locked) {
+            li.addEventListener('dragstart', () => li.classList.add('dragging'));
+            li.addEventListener('dragend', () => { li.classList.remove('dragging'); commitOrderFromDom(); });
+            li.addEventListener('dragover', (e) => {
+              e.preventDefault();
+              const dragging = list.querySelector('.dragging');
+              if (!dragging || dragging === li || li.classList.contains('locked')) return;
+              const rect = li.getBoundingClientRect();
+              const after = (e.clientY - rect.top) > rect.height / 2;
+              list.insertBefore(dragging, after ? li.nextSibling : li);
+            });
+          }
+          list.appendChild(li);
+        });
+      }
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        panel.classList.toggle('d-none');
+        if (!panel.classList.contains('d-none')) render();
+      });
+      document.addEventListener('click', (e) => {
+        if (!panel.classList.contains('d-none') && !panel.contains(e.target) && e.target !== btn) {
+          panel.classList.add('d-none');
+        }
+      });
+      document.getElementById('columnsReset').addEventListener('click', () => {
+        const view = currentView();
+        layouts[view] = buildLayout(null, view);
+        applyLayout(); saveLayout(); render();
+      });
+    })();
+
+    applyLayout();   // initial order/visibility before the first preset renders
+
+    // ---------- Sidebar section nav ----------
+    function applySection(name) {
+      if (name === 'consultantReview') {
+        applyPreset('consultantReview');
+        return;
+      }
+      applyPreset(SECTION_DEFAULT_PRESET[name] || name);
+    }
+
+    // ---------- Consultant Reviews ----------
+    let consultantsLoaded = false;
+    async function ensureConsultantsLoaded() {
+      if (consultantsLoaded) return;
+      try {
+        const resp = await fetch('/consultants');
+        const data = await resp.json();
+        const sel  = document.getElementById('consultantSelect');
+        (data.consultants || []).forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.userId;
+          opt.textContent = c.name;
+          sel.appendChild(opt);
+        });
+        consultantsLoaded = true;
+      } catch (_) {}
+    }
+
+    function buildConsultantTable(projects) {
+      const tbl = document.createElement('table');
+      tbl.className = 'table table-sm table-hover align-middle';
+      tbl.innerHTML = `<thead><tr>
+        <th>Project Name</th>
+        <th>ARR</th>
+        <th>Delivery Status</th>
+        <th>Due Date</th>
+        <th>Weekly Status</th>
+      </tr></thead>`;
+      const tb = document.createElement('tbody');
+      projects.forEach(p => {
+        const tr = document.createElement('tr');
+        const nameCell = p.rocketlane_url
+          ? `<a href="${p.rocketlane_url}" target="_blank" rel="noopener noreferrer">${p.name}</a>`
+          : p.name;
+        tr.innerHTML = `
+          <td>${nameCell}</td>
+          <td>${p.arr || '—'}</td>
+          <td>${p.delivery_status || '—'}</td>
+          <td>${p.due_date || '—'}</td>
+          <td style="max-width:280px;white-space:pre-wrap;font-size:12px;">${p.weekly_status || '—'}</td>
+        `;
+        tb.appendChild(tr);
+      });
+      tbl.appendChild(tb);
+      return tbl;
+    }
+
+    document.getElementById('consultantSelect').addEventListener('change', async function () {
+      const userId    = this.value;
+      const container = document.getElementById('consultantReviewGroups');
+      if (!userId) { container.innerHTML = ''; return; }
+      container.innerHTML = '<p class="text-muted small">Loading…</p>';
+      try {
+        const resp = await fetch(`/manager/consultant-projects/${userId}`);
+        const data = await resp.json();
+        container.innerHTML = '';
+        if (!data.groups || data.groups.length === 0) {
+          container.innerHTML = '<p class="text-muted">No active projects found for this consultant.</p>';
+          return;
+        }
+        data.groups.forEach(group => {
+          const section = document.createElement('div');
+          section.className = 'mb-4';
+          const heading = document.createElement('h6');
+          heading.className = 'fw-semibold text-muted mb-2';
+          heading.textContent = group.status;
+          section.appendChild(heading);
+          section.appendChild(buildConsultantTable(group.projects));
+          container.appendChild(section);
+        });
+      } catch (err) {
+        container.innerHTML = `<p class="text-danger">Failed to load projects: ${err.message}</p>`;
+      }
+    });
+
+    // ---------- Status flow ----------
+    document.addEventListener('change', async (e) => {
+      if (!e.target.classList.contains('status-select')) return;
+      const sel       = e.target;
+      const prevValue = sel.dataset.prevValue ?? sel.value;
+      const newValue  = parseInt(sel.value, 10);
+      const projectId = sel.dataset.id;
+      sel.disabled = true;
+      try {
+        const resp = await fetch(`/manager-set-status/${projectId}`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ status_value: newValue }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.error || `HTTP ${resp.status}`);
+        // Sync the row's data-status attribute so view filters stay accurate.
+        const tr = sel.closest('tr');
+        if (tr) tr.dataset.status = data.label;
+        document.querySelectorAll(`.status-select[data-id="${projectId}"]`).forEach(other => {
+          other.value = sel.value;
+          other.dataset.prevValue = sel.value;
+        });
+        filterProjects();
+      } catch (err) {
+        alert(`Could not update status: ${err.message}`);
+        sel.value = prevValue;
+      } finally {
+        sel.disabled = false;
+      }
+    });
+    document.querySelectorAll('.status-select').forEach(sel => {
+      sel.dataset.prevValue = sel.value;
+    });
+
+    // ---------- Priority flow ----------
+    document.addEventListener('change', async (e) => {
+      if (!e.target.classList.contains('priority-select')) return;
+      const sel       = e.target;
+      const prevClass = sel.className;
+      const prevValue = sel.dataset.prevValue ?? '';
+      const newValue  = sel.value;
+      const projectId = sel.dataset.id;
+      sel.disabled = true;
+      try {
+        const resp = await fetch(`/set-priority/${projectId}`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ priority: newValue }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.error || `HTTP ${resp.status}`);
+        const tag = newValue ? newValue.toLowerCase() : 'none';
+        // Sync every select with this project id — a project shown in multiple backlog cards
+        // has a separate dropdown per clone, and they all need to reflect the new value.
+        document.querySelectorAll(`.priority-select[data-id="${projectId}"]`).forEach(other => {
+          other.value = newValue;
+          other.className = `priority-select priority-${tag}`;
+          other.dataset.prevValue = newValue;
+          const tr = other.closest('tr');
+          if (tr) {
+            tr.classList.remove('row-critical', 'row-warning');
+            if (newValue === 'Urgent') tr.classList.add('row-critical');
+            else if (newValue === 'High') tr.classList.add('row-warning');
+          }
+        });
+      } catch (err) {
+        alert(`Could not update priority: ${err.message}`);
+        sel.value = prevValue;
+        sel.className = prevClass;
+      } finally {
+        sel.disabled = false;
+      }
+    });
+    // Stash initial value on each select so we can revert on failure.
+    document.querySelectorAll('.priority-select').forEach(sel => {
+      sel.dataset.prevValue = sel.value;
+    });
+
+    // ---------- Delivery Status flow ----------
+    function dsClass(val) {
+      if (val === 'Active') return 'ds-active';
+      if (val === 'Blocked - Waiting on Customer' || val === 'Blocked - Waiting on DigiCert') return 'ds-blocked';
+      if (val === 'On-Hold') return 'ds-onhold';
+      return 'ds-none';
+    }
+    document.addEventListener('change', async (e) => {
+      if (!e.target.classList.contains('delivery-status-select')) return;
+      const sel       = e.target;
+      const prevValue = sel.dataset.prevValue ?? sel.value;
+      const prevClass = sel.className;
+      const newValue  = sel.value;
+      const projectId = sel.dataset.id;
+      sel.disabled = true;
+      try {
+        const resp = await fetch(`/update-delivery-status/${projectId}`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ delivery_status: newValue }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.error || `HTTP ${resp.status}`);
+        document.querySelectorAll(`.delivery-status-select[data-id="${projectId}"]`).forEach(other => {
+          other.value = newValue;
+          other.className = `delivery-status-select ${dsClass(newValue)}`;
+          other.dataset.prevValue = newValue;
+          const tr = other.closest('tr');
+          if (tr) tr.dataset.deliveryStatus = newValue;
+        });
+        filterProjects();
+      } catch (err) {
+        alert(`Could not update delivery status: ${err.message}`);
+        sel.value = prevValue;
+        sel.className = prevClass;
+      } finally {
+        sel.disabled = false;
+      }
+    });
+    document.querySelectorAll('.delivery-status-select').forEach(sel => {
+      sel.dataset.prevValue = sel.value;
+    });
+
+    // ---------- CSM Handover Date flow (fill in a missing date from the backlog) ----------
+    document.addEventListener('change', async (e) => {
+      if (!e.target.classList.contains('csm-date-input')) return;
+      const input = e.target;
+      const date = input.value;            // YYYY-MM-DD or ''
+      if (!date) return;
+      const projectId = input.dataset.id;
+      input.disabled = true;
+      try {
+        const resp = await fetch(`/set-csm-handover/${projectId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.error || `HTTP ${resp.status}`);
+        // The row is no longer missing CSM — turn every matching cell (main + clones) into read-only text.
+        document.querySelectorAll(`.csm-date-input[data-id="${projectId}"]`).forEach(inp => {
+          const td = inp.closest('td');
+          if (td) td.textContent = data.date;
+        });
+        // Rebuild the Missing view so the row drops out of Missing CSM and card counts refresh.
+        restoreToMainTable();
+        if (activePreset === 'missing') splitRowsIntoCards();
+        applyLayout();
+        filterProjects();
+      } catch (err) {
+        alert(`Could not set CSM Handover Date: ${err.message}`);
+        input.disabled = false;
+      }
+    });
+
+    // Backlog is the default landing view now that All Projects is gone.
+    const VIEW_KEY_SET = new Set(VIEW_KEYS);
+    let savedPreset = 'missing';
+    try { savedPreset = localStorage.getItem('rl_active_preset') || 'missing'; } catch (_) {}
+    applyPreset(VIEW_KEY_SET.has(savedPreset) ? savedPreset : 'missing');
+
+    // ---------- Assign flow ----------
+    const assignModal = new bootstrap.Modal(document.getElementById('assignModal'));
+    const assignSelect = document.getElementById('assignConsultantSelect');
+    const assignPmSelect = document.getElementById('assignPmSelect');
+    const assignSubmitBtn = document.getElementById('assignSubmitBtn');
+    const assignError = document.getElementById('assignError');
+    const assignProjectEl = document.getElementById('assignProjectName');
+    let pendingAssignBtn = null;
+    let consultantsCache = null;
+    let pmsCache = null;
+
+    const SDP_ROLE_IDS      = [109411, 109412];
+    const INTERNAL_ROLE_IDS = [100378];
+
+    async function loadConsultants() {
+      if (consultantsCache) return consultantsCache;
+      const resp = await fetch('/consultants');
+      const data = await resp.json();
+      if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+      consultantsCache = data.consultants || [];
+      return consultantsCache;
+    }
+
+    async function loadPms() {
+      if (pmsCache) return pmsCache;
+      const resp = await fetch('/pms');
+      const data = await resp.json();
+      if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+      pmsCache = data.pms || [];
+      return pmsCache;
+    }
+
+    function eligibleConsultants(all) {
+      if (activePreset === 'sdp') {
+        return all.filter(c => (c.roleIds || []).some(r => SDP_ROLE_IDS.includes(r)));
+      }
+      if (activePreset === 'internal') {
+        return all.filter(c => (c.roleIds || []).some(r => INTERNAL_ROLE_IDS.includes(r)));
+      }
+      return all;
+    }
+
+    function populateSelect(sel, consultants, placeholder) {
+      sel.innerHTML = `<option value="">${placeholder}</option>`;
+      consultants.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.userId;
+        opt.textContent = c.name + (c.email ? ` (${c.email})` : '');
+        sel.appendChild(opt);
+      });
+      if (consultants.length === 0) {
+        sel.innerHTML = '<option value="">— No matching consultants —</option>';
+      }
+    }
+
+    // Sub-region → default PM name(s). Central gets two.
+    const REGION_PM_DEFAULTS = {
+      'AMS West':    ['Deroshni'],
+      'AMS East':    ['Shelli'],
+      'AMS Central': ['Deroshni', 'Shelli'],
+    };
+
+    function defaultPmNames(subRegion) {
+      for (const [key, names] of Object.entries(REGION_PM_DEFAULTS)) {
+        if (subRegion && subRegion.toLowerCase().includes(key.toLowerCase())) return names;
+      }
+      return [];
+    }
+
+    function updateAssignSubmit() {
+      assignSubmitBtn.disabled = !assignSelect.value || !assignPmSelect.value;
+    }
+
+    assignSelect.addEventListener('change', updateAssignSubmit);
+    assignPmSelect.addEventListener('change', updateAssignSubmit);
+
+    const techContactStatusEl = document.getElementById('techContactStatus');
+    const techContactNameEl   = document.getElementById('techContactName');
+    const techContactEmailEl  = document.getElementById('techContactEmail');
+    const assignSalesforceLinkEl   = document.getElementById('assignSalesforceLink');
+    const assignSalesforceAnchorEl = document.getElementById('assignSalesforceAnchor');
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.classList.contains('assign-btn')) return;
+      pendingAssignBtn = e.target;
+      assignProjectEl.textContent = e.target.dataset.name || '—';
+      assignError.classList.add('d-none');
+      assignError.textContent = '';
+      assignSubmitBtn.disabled = true;
+      assignSubmitBtn.textContent = 'Assign';
+      assignSelect.innerHTML = '<option value="">Loading…</option>';
+      assignPmSelect.innerHTML = '<option value="">Loading…</option>';
+      techContactStatusEl.textContent = 'Loading…';
+      techContactStatusEl.className = 'text-muted small';
+      techContactNameEl.value  = '';
+      techContactEmailEl.value = '';
+      const sfUrl = e.target.dataset.salesforceUrl || '';
+      if (sfUrl) {
+        assignSalesforceAnchorEl.href = sfUrl;
+        assignSalesforceLinkEl.classList.remove('d-none');
+      } else {
+        assignSalesforceLinkEl.classList.add('d-none');
+      }
+      assignModal.show();
+      const subRegion = e.target.dataset.subRegion || '';
+      const projectId = e.target.dataset.id;
+
+      // Load consultants/PMs and technical contact in parallel.
+      Promise.all([loadConsultants(), loadPms()])
+        .then(([all, allPms]) => {
+          const eligible = eligibleConsultants(all);
+          populateSelect(assignSelect, eligible, '— Select consultant —');
+          populateSelect(assignPmSelect, allPms, '— Select project manager —');
+          // Pre-select the default PM for this sub-region.
+          const defaults = defaultPmNames(subRegion);
+          if (defaults.length >= 1) {
+            const match = allPms.find(c => c.name.toLowerCase().startsWith(defaults[0].toLowerCase()));
+            if (match) assignPmSelect.value = match.userId;
+          }
+          updateAssignSubmit();
+        })
+        .catch(err => {
+          assignSelect.innerHTML = '<option value="">— Failed to load —</option>';
+          assignPmSelect.innerHTML = '<option value="">— Failed to load —</option>';
+          assignError.textContent = `Could not load users: ${err.message}`;
+          assignError.classList.remove('d-none');
+        });
+
+      fetch(`/project-technical-contact/${projectId}`)
+        .then(r => r.json())
+        .then(tc => {
+          if (tc.name || tc.email) {
+            techContactNameEl.value  = tc.name  || '';
+            techContactEmailEl.value = tc.email || '';
+            techContactStatusEl.textContent = 'From Customer Provisioning Form';
+            techContactStatusEl.className = 'text-muted small';
+          } else {
+            techContactStatusEl.textContent = 'No technical contact found';
+            techContactStatusEl.className = 'text-warning small';
+          }
+        })
+        .catch(() => {
+          techContactStatusEl.textContent = 'Could not load';
+          techContactStatusEl.className = 'text-danger small';
+        });
+    });
+
+    assignSubmitBtn.addEventListener('click', async () => {
+      const consultantId = assignSelect.value;
+      const pmId = assignPmSelect.value;
+      if (!consultantId || !pmId || !pendingAssignBtn) return;
+
+      assignError.classList.add('d-none');
+      assignSubmitBtn.disabled = true;
+      assignSubmitBtn.textContent = 'Assigning…';
+
+      // For regions with two PMs, resolve the second one from the full consultant list and send both.
+      const subRegion = pendingAssignBtn.dataset.subRegion || '';
+      const defaults = defaultPmNames(subRegion);
+      let pmIds = [parseInt(pmId, 10)];
+      if (defaults.length > 1 && pmsCache) {
+        defaults.forEach(name => {
+          const match = pmsCache.find(c => c.name.toLowerCase().startsWith(name.toLowerCase()));
+          if (match && !pmIds.includes(match.userId)) pmIds.push(match.userId);
+        });
+      }
+
+      try {
+        const customerName  = techContactNameEl.value.trim();
+        const customerEmail = techContactEmailEl.value.trim();
+        const resp = await fetch(`/assign-project/${pendingAssignBtn.dataset.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ consultantId, pmIds, customerName, customerEmail }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.error || `HTTP ${resp.status}`);
+
+        const consultantName = assignSelect.options[assignSelect.selectedIndex].textContent.split(' (')[0];
+        if (data.warning) alert(data.warning);
+        assignModal.hide();
+        // Mutate every Assign button for this project — clones in other backlog cards need to
+        // reflect the assignment too.
+        const projectId = pendingAssignBtn.dataset.id;
+        document.querySelectorAll(`.assign-btn[data-id="${projectId}"]`).forEach(btn => {
+          btn.textContent = `✓ Assigned to ${consultantName}`;
+          btn.classList.remove('btn-outline-primary', 'assign-btn');
+          btn.classList.add('btn-success');
+          btn.disabled = true;
+        });
+      } catch (err) {
+        assignError.textContent = err.message || 'Network error — please try again.';
+        assignError.classList.remove('d-none');
+        assignSubmitBtn.disabled = false;
+        assignSubmitBtn.textContent = 'Assign';
+      }
+    });
+
+
+    // ---------- LOE details flow ----------
+    const loeModal = new bootstrap.Modal(document.getElementById('loeModal'));
+    const loeModalTitle = document.getElementById('loeModalTitle');
+    const loeModalBody = document.getElementById('loeModalBody');
+
+    // Small DOM helpers — build with textContent so free-form RocketLane text is never
+    // interpreted as HTML (XSS-safe).
+    const el = (tag, cls, text) => {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    };
+
+    function renderLoe(data) {
+      loeModalBody.replaceChildren();
+
+      // Header meta row: product, status, hours.
+      const meta = el('div', 'loe-meta');
+      const addMeta = (label, value) => {
+        if (value == null || value === '') return;
+        const s = el('span');
+        s.appendChild(el('strong', null, label + ': '));
+        s.appendChild(document.createTextNode(String(value)));
+        meta.appendChild(s);
+      };
+      addMeta('Product', data.product);
+      addMeta('LOE Status', data.status);
+      const h = data.hours || {};
+      addMeta('TLM Hours', h.tlm);
+      addMeta('STM Hours', h.stm);
+      addMeta('Total Hours', h.total);
+      addMeta('Planning Hours', h.planning);
+      if (meta.childNodes.length) loeModalBody.appendChild(meta);
+
+      const sections = data.sections || [];
+      const hasContent = sections.some(s => (s.activities || []).length || s.overview || s.se_pov);
+      if (!hasContent) {
+        loeModalBody.appendChild(el('p', 'loe-empty', 'No LOE details recorded for this project.'));
+        return;
+      }
+
+      sections.forEach(sec => {
+        loeModalBody.appendChild(el('div', 'loe-section-title', sec.name));
+
+        if (sec.overview) {
+          const p = el('p', 'loe-narrative');
+          p.appendChild(el('span', 'lbl', 'Project Overview: '));
+          p.appendChild(document.createTextNode(sec.overview));
+          loeModalBody.appendChild(p);
+        }
+        if (sec.se_pov) {
+          const p = el('p', 'loe-narrative');
+          p.appendChild(el('span', 'lbl', 'SE POV Activities Performed: '));
+          p.appendChild(document.createTextNode(sec.se_pov));
+          loeModalBody.appendChild(p);
+        }
+
+        const acts = sec.activities || [];
+        if (!acts.length) {
+          loeModalBody.appendChild(el('p', 'loe-empty', 'No activities in scope.'));
+          return;
+        }
+        const tbl = el('table', 'loe-activities');
+        const thead = el('thead');
+        const htr = el('tr');
+        ['Activity', 'Qty', 'Details'].forEach((t, i) =>
+          htr.appendChild(el('th', i === 1 ? 'loe-act-val' : null, t)));
+        thead.appendChild(htr);
+        tbl.appendChild(thead);
+        const tb = el('tbody');
+        acts.forEach(a => {
+          const tr = el('tr');
+          tr.appendChild(el('td', 'loe-act-name', a.activity));
+          tr.appendChild(el('td', 'loe-act-val', a.value == null ? '' : String(a.value)));
+          tr.appendChild(el('td', null, a.details || '—'));
+          tb.appendChild(tr);
+        });
+        tbl.appendChild(tb);
+        loeModalBody.appendChild(tbl);
+      });
+    }
+
+    // ---------- Weekly Status click handler (read + submit) ----------
+    const wsModal        = new bootstrap.Modal(document.getElementById('wsModal'));
+    const wsModalTitle   = document.getElementById('wsModalTitle');
+    const wsModalBody    = document.getElementById('wsModalBody');
+    const wsModalDate    = document.getElementById('wsModalDate');
+    const wsUpdateText   = document.getElementById('wsUpdateText');
+    const wsUpdateError  = document.getElementById('wsUpdateError');
+    const wsUpdateSubmitBtn = document.getElementById('wsUpdateSubmitBtn');
+    let wsModalProjectId = null;
+    let wsModalRow       = null;
+
+    function setWsModalContent(entry) {
+      const full = entry.full || '';
+      const date = entry.date || '';
+      if (date) {
+        wsModalDate.textContent = date;
+        wsModalDate.style.display = '';
+      } else {
+        wsModalDate.textContent = '';
+        wsModalDate.style.display = 'none';
+      }
+      // Strip the embedded date from "[Author · date]:" so the body shows "[Author]: text".
+      const displayText = full.replace(/\[([^\]·]+?)\s*·\s*[^\]]+\]:/g, '[$1]:');
+      wsModalBody.textContent = displayText || 'No weekly status recorded for this project.';
+    }
+
+    function resetWsUpdateForm() {
+      wsUpdateText.value = '';
+      wsUpdateSubmitBtn.disabled = true;
+      wsUpdateSubmitBtn.textContent = 'Submit';
+      wsUpdateError.classList.add('d-none');
+      wsUpdateError.textContent = '';
+    }
+
+    wsUpdateText.addEventListener('input', function () {
+      wsUpdateSubmitBtn.disabled = !this.value.trim();
+    });
+
+    document.getElementById('wsModal').addEventListener('shown.bs.modal', () => {
+      wsUpdateText.focus();
+    });
+
+    document.getElementById('wsModal').addEventListener('hidden.bs.modal', () => {
+      resetWsUpdateForm();
+    });
+
+    document.addEventListener('click', function (e) {
+      const trigger = e.target.closest('.ws-trigger, .ws-trigger-none');
+      if (!trigger) return;
+      const td = trigger.closest('td[data-project-id]');
+      if (!td) return;
+      const id = td.dataset.projectId;
+      const row = trigger.closest('tr');
+      const nameCell = row && row.querySelector('td[data-key="name"]');
+      wsModalProjectId = id;
+      wsModalRow = row;
+      wsModalTitle.textContent = nameCell ? nameCell.textContent.trim() : '—';
+      setWsModalContent(WEEKLY_STATUS_DATA[id] || {});
+      resetWsUpdateForm();
+      wsModal.show();
+    });
+
+    wsUpdateSubmitBtn.addEventListener('click', async () => {
+      const text = wsUpdateText.value.trim();
+      if (!text || !wsModalProjectId) return;
+
+      wsUpdateError.classList.add('d-none');
+      wsUpdateSubmitBtn.disabled = true;
+      wsUpdateSubmitBtn.textContent = 'Submitting…';
+
+      try {
+        const resp = await fetch(`/update-weekly-status/${wsModalProjectId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.error || `HTTP ${resp.status}`);
+
+        wsModal.hide();
+
+        // Optimistically update the weekly status cell in the row.
+        if (wsModalRow) {
+          const wsCell = cellByKey(wsModalRow, 'weekly_status');
+          if (wsCell) {
+            wsCell.dataset.projectId = wsModalProjectId;
+            const span = document.createElement('span');
+            span.className = 'ws-trigger';
+            span.textContent = (data.entry || text).slice(0, 120);
+            wsCell.replaceChildren(span);
+            // Poll for the automation-processed value (field 1769450) with a 1s delay,
+            // retrying once if the value hasn't changed yet.
+            const projectId = wsModalProjectId;
+            const oldFull = (WEEKLY_STATUS_DATA[projectId] || {}).full || '';
+            const delay = ms => new Promise(res => setTimeout(res, ms));
+            (async () => {
+              try {
+                await delay(1000);
+                let ws = await fetch(`/project-weekly-status/${projectId}`)
+                  .then(r => r.ok ? r.json() : null);
+                if (ws && ws.full === oldFull) {
+                  await delay(1000);
+                  ws = await fetch(`/project-weekly-status/${projectId}`)
+                    .then(r => r.ok ? r.json() : null);
+                }
+                if (ws && ws.preview) {
+                  span.textContent = ws.preview;
+                  if (ws.full != null) WEEKLY_STATUS_DATA[+projectId] = { full: ws.full, date: ws.date || '' };
+                }
+              } catch (_) {}
+            })();
+          }
+        }
+      } catch (err) {
+        wsUpdateError.textContent = err.message || 'Network error — please try again.';
+        wsUpdateError.classList.remove('d-none');
+        wsUpdateSubmitBtn.disabled = false;
+        wsUpdateSubmitBtn.textContent = 'Submit';
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      const link = e.target.closest('.loe-link');
+      if (!link) return;
+      e.preventDefault();
+      loeModalTitle.textContent = link.dataset.name || '—';
+      loeModalBody.replaceChildren(el('p', 'loe-empty', 'Loading…'));
+      loeModal.show();
+      fetch(`/loe-details/${link.dataset.id}`)
+        .then(async resp => {
+          const data = await resp.json();
+          if (!resp.ok || data.error) throw new Error(data.error || `HTTP ${resp.status}`);
+          renderLoe(data);
+        })
+        .catch(err => {
+          loeModalBody.replaceChildren(
+            el('p', 'text-danger', `Could not load LOE details: ${err.message}`));
+        });
+    });
+
+  </script>
+</body>
+
+</html>

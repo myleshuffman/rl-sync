@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — RocketLane Projects</title>
+  <link rel="icon" type="image/svg+xml" href="/static/escalation_icon.svg">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --dc-navy: #0c2a4f;
+      --dc-blue: #0570d6;
+      --dc-blue-hover: #045eb8;
+      --dc-bg: #f4f6fa;
+      --dc-card-border: #e2e8f0;
+      --dc-text: #1a2332;
+      --dc-muted: #64748b;
+      --dc-table-header: #f0f3f8;
+      --dc-accent-green: #1d9c5e;
+      --dc-accent-red: #e34a4a;
+    }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--dc-bg);
+      color: var(--dc-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+    }
+    .topbar {
+      background: var(--dc-navy);
+      color: #fff;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar .logo { font-size: 18px; font-weight: 600; }
+    .topbar .logo .dot { color: var(--dc-blue); font-size: 11px; vertical-align: super; }
+    .topbar a { color: #a8b8cf; text-decoration: none; font-size: 13px; }
+    .topbar a:hover { color: #fff; }
+    .container-narrow { max-width: 1100px; margin: 28px auto; padding: 0 24px; }
+    h1.page-title { font-size: 22px; font-weight: 600; margin: 0 0 14px; }
+    h2.section-title { font-size: 16px; font-weight: 600; margin: 28px 0 12px; scroll-margin-top: 16px; }
+    .section-anchors {
+      display: flex;
+      gap: 14px;
+      font-size: 13px;
+      color: var(--dc-muted);
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--dc-card-border);
+      padding-bottom: 12px;
+    }
+    .section-anchors a { color: var(--dc-blue); text-decoration: none; }
+    .section-anchors a:hover { text-decoration: underline; }
+
+    .card-box {
+      background: #fff;
+      border: 1px solid var(--dc-card-border);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .card-box table { margin: 0; font-size: 13px; }
+    .card-box thead { background: var(--dc-table-header); }
+    .card-box thead th {
+      color: var(--dc-text);
+      font-weight: 600;
+      font-size: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--dc-card-border);
+    }
+    .card-box tbody td { padding: 9px 12px; border-top: 1px solid #eef1f6; vertical-align: middle; }
+    .form-section { background: #fff; border: 1px solid var(--dc-card-border); border-radius: 4px; padding: 16px; }
+    .form-section .form-label { font-size: 12px; font-weight: 500; }
+    .row-inactive td { color: var(--dc-muted); font-style: italic; }
+    .btn-dc-primary { background: var(--dc-blue); color: #fff; border: 1px solid var(--dc-blue); }
+    .btn-dc-primary:hover { background: var(--dc-blue-hover); border-color: var(--dc-blue-hover); color: #fff; }
+    .token-banner {
+      background: #fffbe6;
+      border: 1px solid #f4d568;
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+    .token-banner code {
+      background: #fff;
+      border: 1px solid var(--dc-card-border);
+      padding: 6px 10px;
+      border-radius: 3px;
+      display: block;
+      margin-top: 6px;
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .alert-thin { padding: 8px 12px; font-size: 13px; margin-bottom: 14px; }
+
+    /* SSO config table — definition-list style */
+    .sso-table td { vertical-align: middle; }
+    .sso-table td.sso-label { width: 200px; color: var(--dc-muted); font-weight: 500; }
+    .sso-table td.sso-value {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px;
+      word-break: break-all;
+      color: var(--dc-text);
+    }
+    .sso-table td.sso-value .empty { color: var(--dc-muted); font-style: italic; font-family: inherit; font-size: 13px; }
+    .sso-table td.sso-action { width: 1%; white-space: nowrap; }
+    .copy-btn {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      border: 1px solid var(--dc-card-border);
+      background: #fff;
+      color: var(--dc-text);
+      cursor: pointer;
+    }
+    .copy-btn:hover { background: var(--dc-blue); color: #fff; border-color: var(--dc-blue); }
+    .pill-ok  { background: #e6f4ec; color: #1d6f3d; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .pill-bad { background: #fdecec; color: #a02525; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .sso-footer { font-size: 12px; color: var(--dc-muted); padding: 10px 14px; background: #fafbfd; border-top: 1px solid var(--dc-card-border); }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div>
+      <span class="logo">digicert<span class="dot">°</span>ONE</span>
+      <span style="opacity: 0.7; margin-left: 12px; font-size: 13px;">Settings</span>
+    </div>
+    <div>
+      <a href="/">← Back to dashboard</a>
+      <span style="margin: 0 12px; opacity: 0.4;">|</span>
+      <a href="/logout">Sign out ({{ current_user.email }})</a>
+    </div>
+  </div>
+
+  <div class="container-narrow">
+    <h1 class="page-title">Settings</h1>
+
+    <div class="section-anchors">
+      <a href="#sso">SSO Configuration</a>
+      <a href="#users">Users</a>
+      <a href="#api-keys">API Keys</a>
+    </div>
+
+    {% if banner %}<div class="alert alert-success alert-thin">{{ banner }}</div>{% endif %}
+    {% if error  %}<div class="alert alert-danger alert-thin">{{ error  }}</div>{% endif %}
+
+    {% if new_token %}
+    <div class="token-banner">
+      <strong>New API key issued.</strong>
+      Copy this token now — it will not be shown again.
+      <code id="newToken">{{ new_token }}</code>
+      <button class="btn btn-sm btn-outline-secondary mt-2"
+              onclick="navigator.clipboard.writeText(document.getElementById('newToken').textContent); this.textContent='Copied ✓'">
+        Copy
+      </button>
+    </div>
+    {% endif %}
+
+    <!-- =================== SSO Configuration =================== -->
+    <h2 class="section-title" id="sso">SSO Configuration</h2>
+    <div class="card-box">
+      <table class="table mb-0 sso-table">
+        <tbody>
+          <tr>
+            <td class="sso-label">Status</td>
+            <td class="sso-value" colspan="2">
+              {% if sso.configured %}
+              <span class="pill-ok">✓ Configured</span>
+              {% else %}
+              <span class="pill-bad">✗ Not configured</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="sso-label">OIDC Issuer</td>
+            <td class="sso-value">
+              {% if sso.issuer %}{{ sso.issuer }}{% else %}<span class="empty">— not set —</span>{% endif %}
+            </td>
+            <td class="sso-action">
+              {% if sso.issuer %}<button class="copy-btn" data-copy="{{ sso.issuer }}">Copy</button>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="sso-label">Discovery URL</td>
+            <td class="sso-value">
+              {% if sso.discovery_url %}{{ sso.discovery_url }}{% else %}<span class="empty">—</span>{% endif %}
+            </td>
+            <td class="sso-action">
+              {% if sso.discovery_url %}<button class="copy-btn" data-copy="{{ sso.discovery_url }}">Copy</button>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="sso-label">Client ID</td>
+            <td class="sso-value">
+              {% if sso.client_id %}{{ sso.client_id }}{% else %}<span class="empty">— not set —</span>{% endif %}
+            </td>
+            <td class="sso-action">
+              {% if sso.client_id %}<button class="copy-btn" data-copy="{{ sso.client_id }}">Copy</button>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="sso-label">Client Secret</td>
+            <td class="sso-value">
+              <span id="secretMasked">{{ sso.client_secret_masked }}</span>
+              <span id="secretLast4" style="display: none;">{{ sso.client_secret_masked }}{{ sso.client_secret_last4 }}</span>
+            </td>
+            <td class="sso-action">
+              {% if sso.client_secret_last4 %}
+              <button class="copy-btn" id="toggleLast4"
+                      onclick="toggleSecret()">Show last 4</button>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td class="sso-label">Scopes</td>
+            <td class="sso-value">{{ sso.scopes }}</td>
+            <td class="sso-action"></td>
+          </tr>
+          <tr>
+            <td class="sso-label">Redirect URI</td>
+            <td class="sso-value">{{ sso.redirect_uri }}</td>
+            <td class="sso-action">
+              <button class="copy-btn" data-copy="{{ sso.redirect_uri }}">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="sso-label">SCIM Base URL</td>
+            <td class="sso-value">{{ sso.scim_base_url }}</td>
+            <td class="sso-action">
+              <button class="copy-btn" data-copy="{{ sso.scim_base_url }}">Copy</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="sso-label">Configuration source</td>
+            <td class="sso-value" colspan="2">{{ sso.source }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="sso-footer">
+        SSO settings are loaded from <code>.env</code> at startup. To change them, edit <code>.env</code> and restart the app.
+      </div>
+    </div>
+
+    <!-- =================== Users =================== -->
+    <h2 class="section-title" id="users">Users</h2>
+    <div class="card-box">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr class="{{ '' if u.active else 'row-inactive' }}">
+            <td>{{ u.name }}</td>
+            <td>{{ u.email }}</td>
+            <td>
+              <form method="post" action="/users/{{ u.id }}/update" class="d-flex gap-1">
+                <input type="hidden" name="first_name" value="{{ u.first_name }}">
+                <input type="hidden" name="last_name"  value="{{ u.last_name  }}">
+                <select name="role" class="form-select form-select-sm" style="width: auto;"
+                        {% if u.id == current_user.id %}disabled{% endif %}>
+                  {% for r in roles %}
+                  <option value="{{ r }}" {% if u.role == r %}selected{% endif %}>{{ r }}</option>
+                  {% endfor %}
+                </select>
+                {% if u.id != current_user.id %}
+                <button class="btn btn-sm btn-outline-secondary">Save</button>
+                {% endif %}
+              </form>
+            </td>
+            <td>{{ 'Active' if u.active else 'Inactive' }}</td>
+            <td>
+              {% if u.active %}
+                {% if u.id != current_user.id %}
+                <form method="post" action="/users/{{ u.id }}/deactivate" style="display:inline">
+                  <button class="btn btn-sm btn-outline-danger">Deactivate</button>
+                </form>
+                {% else %}
+                <span class="text-muted small">(you)</span>
+                {% endif %}
+              {% else %}
+                <form method="post" action="/users/{{ u.id }}/reactivate" style="display:inline">
+                  <button class="btn btn-sm btn-outline-success">Reactivate</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section-title">Add user</h2>
+    <div class="form-section">
+      <form method="post" action="/users" class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">First name</label>
+          <input type="text" name="first_name" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Last name</label>
+          <input type="text" name="last_name" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Role</label>
+          <select name="role" class="form-select form-select-sm" required>
+            {% for r in roles %}
+            <option value="{{ r }}" {% if r == 'Read Only' %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-sm btn-dc-primary w-100">Add</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- =================== API Keys =================== -->
+    <h2 class="section-title" id="api-keys">SCIM API keys</h2>
+    <div class="card-box">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Label</th>
+            <th>Created</th>
+            <th>Last used</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for k in api_keys %}
+          <tr class="{{ '' if k.active else 'row-inactive' }}">
+            <td>{{ k.label }}</td>
+            <td>{{ k.created_at }}</td>
+            <td>{{ k.last_used_at or '—' }}</td>
+            <td>{{ 'Active' if k.active else 'Revoked' }}</td>
+            <td>
+              {% if k.active %}
+              <form method="post" action="/api-keys/{{ k.id }}/deactivate" style="display:inline">
+                <button class="btn btn-sm btn-outline-danger">Revoke</button>
+              </form>
+              {% else %}
+              <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-muted text-center" style="padding: 16px;">
+            No API keys issued yet.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="form-section mt-3">
+      <form method="post" action="/api-keys" class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label">Label (e.g. "Okta SCIM")</label>
+          <input type="text" name="label" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-sm btn-dc-primary w-100">Issue key</button>
+        </div>
+        <div class="col-md-4">
+          <small class="text-muted">
+            The token is shown once at creation. Store it somewhere safe — only its hash is kept.
+          </small>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Copy buttons — copy the data-copy attribute to clipboard.
+    document.querySelectorAll('.copy-btn[data-copy]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(btn.dataset.copy);
+        const original = btn.textContent;
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => { btn.textContent = original; }, 1200);
+      });
+    });
+
+    function toggleSecret() {
+      const masked = document.getElementById('secretMasked');
+      const last4  = document.getElementById('secretLast4');
+      const btn    = document.getElementById('toggleLast4');
+      const showing = last4.style.display !== 'none';
+      if (showing) {
+        last4.style.display = 'none';
+        masked.style.display = '';
+        btn.textContent = 'Show last 4';
+      } else {
+        masked.style.display = 'none';
+        last4.style.display = '';
+        btn.textContent = 'Hide';
+      }
+    }
+  </script>
+</body>
+</html>
