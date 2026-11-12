@@ -13,6 +13,7 @@ import io
 import requests
 import openpyxl
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 import db
 from scim import scim_bp
@@ -274,7 +275,9 @@ def auth_callback():
     session["id_token"] = token.get("id_token")
     if u["role"] == "Consultant":
         return redirect(url_for("consultant_home"))
-    next_url = request.args.get("next") or url_for("index")
+    next_param = (request.args.get("next") or "").replace("\\", "")
+    parsed_next = urlparse(next_param)
+    next_url = next_param if next_param and not parsed_next.scheme and not parsed_next.netloc else url_for("index")
     return redirect(next_url)
 
 
