@@ -310,9 +310,10 @@ def _weekly_status_parts(raw, preview_limit=100):
     """
     if not raw:
         return ("-", "", "")
-    text = re.sub(r"</(p|div|li|h[1-6])>", "\n", raw, flags=re.IGNORECASE)
-    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
-    text = re.sub(r"<[^>]+>", "", text)
+    raw = raw[:200_000]  # bound input size so regex work stays linear
+    text = re.sub(r"</(?:p|div|li|h[1-6])>", "\n", raw, flags=re.IGNORECASE)
+    text = re.sub(r"<br ?/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^<>]*>", "", text)
     text = html.unescape(text)
     paragraphs = [p.strip() for p in re.split(r"\n{2,}", text) if p.strip()]
     if not paragraphs:
@@ -323,8 +324,11 @@ def _weekly_status_parts(raw, preview_limit=100):
     if len(preview) > preview_limit:
         preview = preview[:preview_limit].rstrip() + "…"
     # Extract date from "[Author · 10 Sep 2026]: ..." prefix in the first paragraph.
-    date_match = re.match(r"^\[.*?·\s*(.+?)\]:", paragraphs[0])
-    ws_date = date_match.group(1).strip() if date_match else ""
+    ws_date = ""
+    head = paragraphs[0][:200]
+    close = head.find("]:")
+    if head.startswith("[") and close != -1 and "·" in head[:close]:
+        ws_date = head[:close].split("·", 1)[1].strip()
     return (preview, "\n\n".join(paragraphs), ws_date)
 
 
@@ -332,7 +336,7 @@ def _html_to_text(raw, limit=280):
     """Flatten a RocketLane NOTE field's HTML into a trimmed, single-line plain-text preview."""
     if not raw:
         return "-"
-    text = re.sub(r"<[^>]+>", " ", raw)      # drop tags
+    text = re.sub(r"<[^<>]*>", " ", raw[:200_000])      # drop tags
     text = html.unescape(text)               # &nbsp; etc.
     text = re.sub(r"\s+", " ", text).strip()
     if not text:
@@ -894,7 +898,8 @@ def index():
     try:
         projects = fetch_projects(region=active_region, force_refresh=force_refresh)
     except requests.exceptions.RequestException as exc:
-        error = f"API request failed: {exc}"
+        app.logger.warning("RocketLane API request failed: %s", exc)
+        error = "API request failed. Please try again or contact an administrator."
 
     fetched_at = _PROJECTS_CACHE_BY_REGION[active_region]["fetched_at"] or 0
     raw_layout = (db.user_by_id(user["id"]) or {}).get("column_layout")
@@ -1000,7 +1005,8 @@ def consultant_home():
             # Remaining Hours + Shared-space docs come from the /v1 detail — enrich only what we'll display.
             _enrich_project_details(owned + member)
         except requests.exceptions.RequestException as exc:
-            error = f"API request failed: {exc}"
+            app.logger.warning("RocketLane API request failed: %s", exc)
+            error = "API request failed. Please try again or contact an administrator."
 
     # Status is editable only for a real Consultant on their own projects (read-only while impersonating).
     status_editable = user.get("role") == "Consultant"
@@ -1033,7 +1039,7 @@ def set_project_status(project_id):
                 if _matches_consultant(p["owner"], target)
                 or any(_matches_consultant(m, target) for m in p["members"])}
     except requests.exceptions.RequestException as exc:
-        return jsonify({"success": False, "error": f"Could not verify project: {exc}"}), 502
+        return jsonify({"success": False, "error": "Could not verify project"}), 502
     if project_id not in mine:
         return jsonify({"success": False, "error": "Project not in your list"}), 403
 
@@ -1057,7 +1063,7 @@ def set_project_status(project_id):
         print(f"[set-project-status] ERROR: {exc} | {detail}")
         if status_code == 404:
             return jsonify({"success": False, "error": "Project not found in RocketLane — it may have been archived or removed. Try refreshing."}), 404
-        return jsonify({"success": False, "error": str(exc), "detail": detail}), 500
+        return jsonify({"success": False, "error": "RocketLane request failed. Please try again or contact an administrator."}), 500
 
 
 @app.route("/manager-set-status/<int:project_id>", methods=["POST"])
@@ -1078,7 +1084,7 @@ def manager_set_status(project_id):
     except requests.exceptions.RequestException as exc:
         detail = resp.text if resp is not None else ""
         print(f"[manager-set-status] ERROR: {exc} | {detail}")
-        return jsonify({"success": False, "error": str(exc), "detail": detail}), 502
+        return jsonify({"success": False, "error": "RocketLane request failed. Please try again or contact an administrator."}), 502
 
 
 @app.route("/manager/consultant-projects/<int:user_id>", methods=["GET"])
@@ -1143,7 +1149,7 @@ def update_delivery_status(project_id):
     except requests.exceptions.RequestException as exc:
         detail = resp.text if resp is not None else ""
         print(f"[update-delivery-status] ERROR: {exc} | {detail}")
-        return jsonify({"success": False, "error": str(exc), "detail": detail}), 502
+        return jsonify({"success": False, "error": "RocketLane request failed. Please try again or contact an administrator."}), 502
 
 
 @app.route("/update-weekly-status/<int:project_id>", methods=["POST"])
@@ -1200,7 +1206,7 @@ def update_weekly_status(project_id):
         print(f"[update-weekly-status] ERROR: {exc} | {detail}")
         if status_code == 404:
             return jsonify({"success": False, "error": "Project not found in RocketLane — it may have been archived or removed. Try refreshing."}), 404
-        return jsonify({"success": False, "error": str(exc), "detail": detail}), 500
+        return jsonify({"success": False, "error": "RocketLane request failed. Please try again or contact an administrator."}), 500
 
 
 @app.route("/project-weekly-status/<int:project_id>", methods=["GET"])
@@ -1221,7 +1227,7 @@ def project_weekly_status(project_id):
         preview, full, ws_date = _weekly_status_parts(raw or "")
         return jsonify({"preview": preview, "full": full, "date": ws_date})
     except requests.exceptions.RequestException as exc:
-        return jsonify({"error": str(exc)}), 502
+        return jsonify({"error": "RocketLane request failed. Please try again or contact an administrator."}), 502
 
 
 @app.route("/set-priority/<int:project_id>", methods=["POST"])
@@ -1253,7 +1259,7 @@ def set_priority(project_id):
         print(f"[set-priority] ERROR: {exc} | {detail}")
         if status_code == 404:
             return jsonify({"success": False, "error": "Project not found in RocketLane — it may have been archived or removed. Try refreshing."}), 404
-        return jsonify({"success": False, "error": str(exc), "detail": detail}), 500
+        return jsonify({"success": False, "error": "RocketLane request failed. Please try again or contact an administrator."}), 500
 
 
 @app.route("/set-csm-handover/<int:project_id>", methods=["POST"])
@@ -1283,7 +1289,7 @@ def set_csm_handover(project_id):
         print(f"[set-csm-handover] ERROR: {exc} | {detail}")
         if status_code == 404:
             return jsonify({"success": False, "error": "Project not found in RocketLane — it may have been archived or removed. Try refreshing."}), 404
-        return jsonify({"success": False, "error": str(exc), "detail": detail}), 500
+        return jsonify({"success": False, "error": "RocketLane request failed. Please try again or contact an administrator."}), 500
 
 
 def fetch_consultants():
@@ -1334,7 +1340,7 @@ def consultants():
     try:
         result = fetch_consultants()
     except requests.exceptions.RequestException as exc:
-        return jsonify({"error": f"Could not fetch consultants: {exc}"}), 502
+        return jsonify({"error": "Could not fetch consultants"}), 502
     return jsonify({"consultants": result})
 
 
@@ -1376,7 +1382,7 @@ def pms():
     try:
         result = fetch_pms()
     except requests.exceptions.RequestException as exc:
-        return jsonify({"error": f"Could not fetch PMs: {exc}"}), 502
+        return jsonify({"error": "Could not fetch PMs"}), 502
     return jsonify({"pms": result})
 
 
@@ -1393,7 +1399,7 @@ def project_technical_contact(project_id):
         email = (get_custom_field(data, TECH_CONTACT_EMAIL_FIELD_ID) or "").strip()
         return jsonify({"name": name, "email": email})
     except requests.exceptions.RequestException as exc:
-        return jsonify({"error": str(exc)}), 502
+        return jsonify({"error": "RocketLane request failed. Please try again or contact an administrator."}), 502
 
 
 @app.route("/loe-details/<int:project_id>", methods=["GET"])
@@ -1411,7 +1417,7 @@ def loe_details(project_id):
         body = r.json()
     except requests.exceptions.RequestException as exc:
         print(f"[loe-details] fetch failed for {project_id}: {exc}")
-        return jsonify({"error": f"Could not fetch LOE details: {exc}"}), 502
+        return jsonify({"error": "Could not fetch LOE details"}), 502
 
     vals = {f.get("fieldId"): f.get("fieldValue") for f in (body.get("fields") or [])}
     # Resolved choice labels (metaFieldValue.label) for SINGLE_SELECT fields like the status.
@@ -1544,7 +1550,7 @@ def assign_project(project_id):
     except requests.exceptions.RequestException as exc:
         detail = resp.text if resp is not None else ""
         print(f"[assign] PUT ERROR: {exc} | {detail}")
-        return jsonify({"success": False, "error": str(exc), "detail": detail}), 502
+        return jsonify({"success": False, "error": "RocketLane request failed. Please try again or contact an administrator."}), 502
 
     # Step 2: remove the previous owner — keep the new consultant and any designated PM.
     prev_id = prev_owner.get("userId") if prev_owner else None
@@ -1564,7 +1570,7 @@ def assign_project(project_id):
         except requests.exceptions.RequestException as exc:
             detail = resp3.text if resp3 is not None else ""
             print(f"[assign] DELETE remove-members ERROR: {exc} | {detail}")
-            warnings.append(f"{prev_owner.get('name') or 'The previous owner'} could not be removed automatically: {exc}.")
+            warnings.append(f"{prev_owner.get('name') or 'The previous owner'} could not be removed automatically.")
 
     # Step 3: add PM(s) as internal team members via POST /1.0/…/add-members (non-fatal).
     # The PUT /1.0 teamMembers field is silently ignored by the API, so we use a separate call.
@@ -1658,7 +1664,7 @@ def assign_project(project_id):
         except requests.exceptions.RequestException as exc:
             detail = resp7.text if resp7 is not None else ""
             print(f"[assign] PUT status ERROR: {exc} | {detail}")
-            warnings.append(f"Status could not be set to Ready for Kick-Off: {exc}. Please update it manually in RocketLane.")
+            warnings.append("Status could not be set to Ready for Kick-Off. Please update it manually in RocketLane.")
     else:
         print(f"[assign] skipping status change — no customer contact added")
 
@@ -1770,7 +1776,7 @@ def bulk_assign_templates():
                    and t.get("state") == "PUBLISHED"
                    and (t.get("templateName") or "").startswith(BULK_ASSIGN_NAME_PREFIX)]
     except requests.exceptions.RequestException as exc:
-        return jsonify({"error": f"Could not fetch templates: {exc}"}), 502
+        return jsonify({"error": "Could not fetch templates"}), 502
 
     def load(t):
         hit = _TEMPLATE_CACHE.get(t["templateId"])
@@ -1781,7 +1787,8 @@ def bulk_assign_templates():
             _TEMPLATE_CACHE[t["templateId"]] = (time.time(), detail)
             return t, detail, None
         except requests.exceptions.RequestException as exc:
-            return t, None, str(exc)
+            app.logger.warning("template fetch failed: %s", exc)
+            return t, None, "Template fetch failed"
 
     templates, failed = [], []
     with ThreadPoolExecutor(max_workers=6) as ex:
@@ -1858,7 +1865,8 @@ def bulk_assign_assign():
             return {"templateId": template_id, "name": detail.get("templateName"),
                     "assigned": assigned, "skipped": skipped}
         except requests.exceptions.RequestException as exc:
-            return {"templateId": template_id, "error": str(exc)}
+            app.logger.warning("template assign failed: %s", exc)
+            return {"templateId": template_id, "error": "Template assignment failed"}
 
     with ThreadPoolExecutor(max_workers=4) as ex:
         results = list(ex.map(apply, by_template.items()))
@@ -1881,7 +1889,7 @@ def export_backlog(group):
     try:
         projects = fetch_projects(region=region)
     except requests.exceptions.RequestException as exc:
-        return jsonify({"error": f"Could not fetch projects: {exc}"}), 502
+        return jsonify({"error": "Could not fetch projects"}), 502
 
     # A project goes into the export for `group` whenever THAT specific prereq is missing —
     # independent of whether other prereqs are also missing. Mirrors the multi-card UI behaviour.
@@ -2050,7 +2058,8 @@ def users_create():
     try:
         db.create_user(email=email, first_name=first, last_name=last, role=role)
     except (sqlite3.IntegrityError, ValueError) as exc:
-        return _render_settings(error=str(exc))
+        app.logger.warning("create_user failed: %s", exc)
+        return _render_settings(error="Could not create user. Check the email and role and try again.")
     return _render_settings(banner=f"User {email} created.")
 
 
@@ -2067,7 +2076,8 @@ def users_update(user_id):
     try:
         db.update_user(user_id, **fields)
     except ValueError as exc:
-        return _render_settings(error=str(exc))
+        app.logger.warning("update_user failed: %s", exc)
+        return _render_settings(error="Could not update user. Check the values and try again.")
     return _render_settings(banner="User updated.")
 
 
@@ -2133,7 +2143,8 @@ def debug_find_project():
     try:
         projects = fetch_projects(region=region)
     except Exception as exc:
-        return f"<pre>ERROR: {exc}</pre>"
+        app.logger.exception("debug_find_project failed")
+        return "<pre>ERROR: lookup failed (see server log)</pre>", 500
     matches = [p for p in projects if name_q in p["name"].lower()]
     rows = "".join(
         f"<p><a href='/debug/project-owner/{p['id']}'>{_h.escape(p['name'])}</a> — id={p['id']} status={p['status']}</p>"
@@ -2151,4 +2162,4 @@ app.register_blueprint(scim_bp)
 
 if __name__ == "__main__":
     os.environ.setdefault("AUTHLIB_INSECURE_TRANSPORT", "1")
-    app.run(debug=True, port=5000)
+    app.run(debug=os.getenv("FLASK_DEBUG") == "1", host="127.0.0.1", port=5000)

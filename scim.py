@@ -273,8 +273,8 @@ def user_create():
             role=role, active=bool(active),
             scim_external_id=payload.get("externalId"),
         )
-    except ValueError as exc:
-        return _error(400, str(exc), scim_type="invalidValue")
+    except ValueError:
+        return _error(400, "Invalid user attributes", scim_type="invalidValue")
     return _scim_response(_user_to_scim(u), status=201)
 
 
@@ -294,8 +294,8 @@ def user_replace(user_id):
     fields.setdefault("role", "Read Only")
     try:
         u = db.update_user(user_id, **fields)
-    except ValueError as exc:
-        return _error(400, str(exc), scim_type="invalidValue")
+    except ValueError:
+        return _error(400, "Invalid user attributes", scim_type="invalidValue")
     return _scim_response(_user_to_scim(u))
 
 
@@ -355,8 +355,8 @@ def user_patch(user_id):
             _apply_patch_op(updates, op)
     try:
         u = db.update_user(user_id, **updates)
-    except ValueError as exc:
-        return _error(400, str(exc), scim_type="invalidValue")
+    except ValueError:
+        return _error(400, "Invalid user attributes", scim_type="invalidValue")
     return _scim_response(_user_to_scim(u))
 
 
