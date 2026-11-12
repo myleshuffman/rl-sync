@@ -892,6 +892,12 @@
           <span class="nav-icon">↻</span>
           Refresh Projects
         </button>
+        {% if current_user.role in ['Manager', 'Project Manager'] %}
+        <button type="button" id="bulkAssignBtn" onclick="openBulkAssign()">
+          <span class="nav-icon">👥</span>
+          Bulk Assign
+        </button>
+        {% endif %}
         {% if current_user.role == 'Manager' %}
         <a href="/settings">
           <span class="nav-icon">⚙</span>
@@ -1234,6 +1240,24 @@
     </div>
   </div>
 
+
+  <!-- Bulk Assign Modal -->
+  <div class="modal fade" id="bulkAssignModal" tabindex="-1" aria-labelledby="bulkAssignModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bulkAssignModalLabel">Bulk Assign — Unassigned Template Tasks</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="bulkAssignBody"></div>
+        <div class="modal-footer">
+          <span class="me-auto text-muted small" id="bulkAssignSummary"></span>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-dc-primary" id="bulkAssignSubmit" disabled>Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- LOE Details Modal -->
   <div class="modal fade" id="loeModal" tabindex="-1" aria-labelledby="loeModalLabel" aria-hidden="true">
@@ -2020,9 +2044,6 @@
     let consultantsCache = null;
     let pmsCache = null;
 
-    const SDP_ROLE_IDS      = [109411, 109412];
-    const INTERNAL_ROLE_IDS = [100378];
-
     async function loadConsultants() {
       if (consultantsCache) return consultantsCache;
       const resp = await fetch('/consultants');
@@ -2043,10 +2064,10 @@
 
     function eligibleConsultants(all) {
       if (activePreset === 'sdp') {
-        return all.filter(c => (c.roleIds || []).some(r => SDP_ROLE_IDS.includes(r)));
+        return all.filter(c => c.isSdp === true);
       }
       if (activePreset === 'internal') {
-        return all.filter(c => (c.roleIds || []).some(r => INTERNAL_ROLE_IDS.includes(r)));
+        return all.filter(c => !c.isSdp);
       }
       return all;
     }
@@ -2429,6 +2450,109 @@
           loeModalBody.replaceChildren(
             el('p', 'text-danger', `Could not load LOE details: ${err.message}`));
         });
+    });
+
+    // ---- Bulk Assign ----
+    const bulkBody   = document.getElementById('bulkAssignBody');
+    const bulkSubmit = document.getElementById('bulkAssignSubmit');
+    const bulkSummary = document.getElementById('bulkAssignSummary');
+    let bulkRoles = [];
+
+    function bkEl(tag, cls, text) {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text !== undefined) n.textContent = text;
+      return n;
+    }
+
+    function openBulkAssign() {
+      bulkBody.replaceChildren(bkEl('p', 'text-muted', 'Loading templates and tasks… this can take a few seconds.'));
+      bulkSummary.textContent = '';
+      bulkSubmit.disabled = true;
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('bulkAssignModal')).show();
+      fetch('/bulk-assign/templates')
+        .then(r => r.json().then(d => { if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`); return d; }))
+        .then(renderBulkAssign)
+        .catch(err => bulkBody.replaceChildren(
+          bkEl('p', 'text-danger', `Could not load templates: ${err.message}`)));
+    }
+
+    function renderBulkAssign(data) {
+      bulkRoles = data.roles;
+      const frag = document.createDocumentFragment();
+      if (data.failed && data.failed.length) {
+        frag.append(bkEl('div', 'alert alert-warning',
+          `Could not load ${data.failed.length} template(s): ${data.failed.join(', ')}`));
+      }
+      if (!data.templates.length) {
+        frag.append(bkEl('p', 'text-muted', 'Every task is already assigned to a Customer, PMO or PS Consultant.'));
+        bulkBody.replaceChildren(frag);
+        return;
+      }
+      for (const t of data.templates) {
+        const box = bkEl('div', 'mb-4 bulk-template');
+        const head = bkEl('div', 'd-flex align-items-center border-bottom pb-1 mb-2');
+        head.append(bkEl('h6', 'mb-0 me-auto', `${t.templateName} (${t.tasks.length})`));
+        const all = bkEl('select', 'form-select form-select-sm w-auto');
+        all.title = 'Set every task in this template';
+        all.append(new Option('Set all…', ''));
+        data.roles.forEach(r => all.append(new Option(r, r)));
+        all.addEventListener('change', () => {
+          if (all.value) box.querySelectorAll('select.bulk-role').forEach(s => { s.value = all.value; });
+          all.value = '';
+        });
+        head.append(all);
+        box.append(head);
+        for (const task of t.tasks) {
+          const row = bkEl('div', 'd-flex align-items-center py-1');
+          const label = bkEl('div', 'me-auto pe-3', task.taskName);
+          if (task.phase) label.append(bkEl('div', 'text-muted small', task.phase));
+          const sel = bkEl('select', 'form-select form-select-sm w-auto bulk-role');
+          sel.dataset.templateId = t.templateId;
+          sel.dataset.taskId = task.taskId;
+          data.roles.forEach(r => sel.append(new Option(r, r)));
+          sel.value = 'PS Consultant';
+          row.append(label, sel);
+          box.append(row);
+        }
+        frag.append(box);
+      }
+      bulkBody.replaceChildren(frag);
+      const n = bulkBody.querySelectorAll('select.bulk-role').length;
+      bulkSummary.textContent = `${n} unassigned task${n === 1 ? '' : 's'} in ${data.templates.length} template${data.templates.length === 1 ? '' : 's'}`;
+      bulkSubmit.disabled = false;
+    }
+
+    bulkSubmit.addEventListener('click', async () => {
+      const assignments = [...bulkBody.querySelectorAll('select.bulk-role')].map(s => ({
+        templateId: parseInt(s.dataset.templateId, 10),
+        taskId: parseInt(s.dataset.taskId, 10),
+        role: s.value,
+      }));
+      if (!assignments.length) return;
+      if (!confirm(`Assign ${assignments.length} task(s) in the selected roles? This updates the templates in RocketLane.`)) return;
+      bulkSubmit.disabled = true;
+      bulkSubmit.textContent = 'Assigning…';
+      try {
+        const resp = await fetch('/bulk-assign/assign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assignments }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+        const box = bkEl('div', data.errors.length ? 'alert alert-warning' : 'alert alert-success',
+          `Assigned ${data.assigned} task(s).`);
+        data.errors.forEach(e => box.append(bkEl('div', 'small',
+          `Template ${e.templateId} failed: ${e.error}`)));
+        bulkBody.replaceChildren(box);
+        bulkSummary.textContent = '';
+      } catch (err) {
+        alert(`Bulk assign failed: ${err.message}`);
+        bulkSubmit.disabled = false;
+      } finally {
+        bulkSubmit.textContent = 'Assign';
+      }
     });
 
   </script>

@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+.projects_cache.json
+.claude/settings.local.json

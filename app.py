@@ -97,14 +97,13 @@ LOE_SECTIONS = {192251: "TLM Level of Effort (LOE)", 192812: "STM Level of Effor
 LOE_PRODUCT_SECTIONS = {1: (192251,), 2: (192812,), 3: (192251, 192812)}
 
 # Project assignment constants
-INTERNAL_CONSULTANT_ROLE_IDS = (100378,)              # Internal CLM Consultant
-SDP_CONSULTANT_ROLE_IDS      = (109411, 109412)       # SDP-AMS, SDP-IND
-CONSULTANT_ROLE_IDS          = INTERNAL_CONSULTANT_ROLE_IDS + SDP_CONSULTANT_ROLE_IDS
+PS_CONSULTANT_ROLE_ID        = 133617                 # PS Consultant (unified role)
+DEPARTMENT_FIELD_ID          = 1617964                # Department custom field on users
+# SDP vs Internal is now determined by Department starting with "SDP" (not by role).
 PMO_ROLE_ID                  = 128021                 # PMO
 READY_FOR_KICKOFF_STATUS     = 11                     # top-level project status value
 # Saba Matiwane is the AMS regional placeholder owner auto-assigned by Salesforce.
 # She must always be removed from a project when it is assigned to a real consultant.
-ALWAYS_REMOVE_USER_IDS       = (661032,)              # Saba Matiwane
 
 # Consultant view: which project statuses a consultant's own work spans, and who may see the view.
 # 2=In Progress, 9=On Hold, 11=Ready for Kick-Off, 15=Blocked-Waiting on Customer,
@@ -1285,42 +1284,43 @@ def set_csm_handover(project_id):
 
 
 def fetch_consultants():
-    """Active TEAM_MEMBER users with one of the three consultant roles, sorted by name.
+    """Active TEAM_MEMBER users with the PS Consultant role, sorted by name.
 
+    Each entry includes isSdp=True when the user's Department field starts with "SDP".
     Raises requests.exceptions.RequestException on API failure (callers decide how to surface it).
     """
     endpoint = f"{ROCKETLANE_API_BASE_URL}/1.0/users"
     seen = {}
-    for role_id in CONSULTANT_ROLE_IDS:
-        page_token = None
-        while True:
-            params = {"limit.eq": 250, "roleId.eq": role_id}
-            if page_token:
-                params["pageToken"] = page_token
-            resp = requests.get(endpoint, headers=HEADERS, params=params, timeout=30)
-            resp.raise_for_status()
-            body = resp.json()
-            for u in body.get("data", []):
-                if u.get("status") != "ACTIVE" or u.get("type") != "TEAM_MEMBER":
-                    continue
-                uid = u.get("userId")
-                if uid is None:
-                    continue
-                if uid in seen:
-                    # Same user surfaced under another role — accumulate it.
-                    if role_id not in seen[uid]["roleIds"]:
-                        seen[uid]["roleIds"].append(role_id)
-                    continue
-                seen[uid] = {
-                    "userId":  uid,
-                    "name":    f"{u.get('firstName','')} {u.get('lastName','')}".strip(),
-                    "email":   u.get("email"),
-                    "roleIds": [role_id],
-                }
-            pg = body.get("pagination") or {}
-            if not pg.get("hasMore") or not pg.get("nextPageToken"):
-                break
-            page_token = pg["nextPageToken"]
+    page_token = None
+    while True:
+        params = {"limit.eq": 250, "roleId.eq": PS_CONSULTANT_ROLE_ID,
+                  "includeAllFields": "true"}
+        if page_token:
+            params["pageToken"] = page_token
+        resp = requests.get(endpoint, headers=HEADERS, params=params, timeout=30)
+        resp.raise_for_status()
+        body = resp.json()
+        for u in body.get("data", []):
+            if u.get("status") != "ACTIVE" or u.get("type") != "TEAM_MEMBER":
+                continue
+            uid = u.get("userId")
+            if uid is None:
+                continue
+            department = next(
+                (f.get("fieldValueLabel") or "" for f in (u.get("fields") or [])
+                 if f.get("fieldId") == DEPARTMENT_FIELD_ID),
+                ""
+            )
+            seen[uid] = {
+                "userId": uid,
+                "name":   f"{u.get('firstName','')} {u.get('lastName','')}".strip(),
+                "email":  u.get("email"),
+                "isSdp":  department.upper().startswith("SDP"),
+            }
+        pg = body.get("pagination") or {}
+        if not pg.get("hasMore") or not pg.get("nextPageToken"):
+            break
+        page_token = pg["nextPageToken"]
     return sorted(seen.values(), key=lambda u: u["name"].lower())
 
 
@@ -1563,22 +1563,7 @@ def assign_project(project_id):
             print(f"[assign] DELETE remove-members ERROR: {exc} | {detail}")
             warnings.append(f"{prev_owner.get('name') or 'The previous owner'} could not be removed automatically: {exc}.")
 
-    # Step 3: unconditionally remove any always-remove users (regional placeholders) unless
-    # they happen to be the new consultant being assigned.
-    remove_url = f"{ROCKETLANE_API_BASE_URL}/v1/projects/{project_id}/remove-members"
-    for uid in ALWAYS_REMOVE_USER_IDS:
-        if uid == consultant_id:
-            continue  # they're being assigned as consultant — don't remove
-        if uid == prev_id:
-            continue  # already handled in Step 2
-        try:
-            r = requests.delete(remove_url, headers=HEADERS, json=[{"userId": uid}], timeout=30)
-            print(f"[assign] always-remove {uid} status={r.status_code}")
-            # 4xx is expected when the user isn't on the project — not an error worth surfacing.
-        except requests.exceptions.RequestException as exc:
-            print(f"[assign] always-remove {uid} error (non-fatal): {exc}")
-
-    # Step 3b: add PM(s) as internal team members via POST /1.0/…/add-members (non-fatal).
+    # Step 3: add PM(s) as internal team members via POST /1.0/…/add-members (non-fatal).
     # The PUT /1.0 teamMembers field is silently ignored by the API, so we use a separate call.
     for pm_id in pm_ids:
         if pm_id == consultant_id:
@@ -1674,6 +1659,31 @@ def assign_project(project_id):
     else:
         print(f"[assign] skipping status change — no customer contact added")
 
+    # Step 6: set "PS Pre Kick-off" task in the Kickoff phase to In Progress (non-fatal)
+    try:
+        tasks_resp = requests.get(
+            f"{ROCKETLANE_API_BASE_URL}/1.0/tasks?project.eq={project_id}&pageSize=200",
+            headers=HEADERS, timeout=15
+        )
+        tasks_resp.raise_for_status()
+        tasks = tasks_resp.json().get("data") or []
+        ps_task = next((t for t in tasks if t.get("taskName") == "PS Pre Kick-off"), None)
+        if ps_task:
+            task_id = ps_task["taskId"]
+            upd = requests.put(
+                f"{ROCKETLANE_API_BASE_URL}/1.0/tasks/{task_id}",
+                headers=HEADERS, json={"status": {"value": 2}}, timeout=15
+            )
+            print(f"[assign] PS Pre Kick-off task {task_id} -> In Progress status={upd.status_code} body={upd.text[:200]}")
+            if not upd.ok:
+                warnings.append("'PS Pre Kick-off' could not be set to In Progress. Please update it manually in RocketLane.")
+        else:
+            print(f"[assign] PS Pre Kick-off task not found for project {project_id}")
+            warnings.append("'PS Pre Kick-off' task not found — please set it to In Progress manually in RocketLane.")
+    except Exception as exc:
+        print(f"[assign] PS Pre Kick-off update error (non-fatal): {exc}")
+        warnings.append("Could not set 'PS Pre Kick-off' to In Progress. Please update it manually in RocketLane.")
+
     result = {"success": True}
     if warnings:
         result["warning"] = " ".join(warnings) + " Please complete the remaining steps manually in RocketLane."
@@ -1685,6 +1695,174 @@ BACKLOG_GROUP_TITLES = {
     "csm": "Missing CSM Handover",
     "sdp": "SDP Approval",
 }
+
+
+# ---------------------------------------------------------------------------
+# Bulk Assign — assign role placeholders to unassigned template tasks
+# ---------------------------------------------------------------------------
+# Template tasks are assigned to role *placeholders* (teams), which real users fill in when a
+# project is created from the template. Template reads/writes use the /v1/templates endpoints:
+#   GET /v1/templates            -> list (includes non-project templates: docs, forms)
+#   GET /v1/templates/{id}       -> templateContent.projectPhases[].tasks[] (+ nested subTasks)
+#   PUT /v1/templates/{id}       -> full-object replace; templateMeta.assignee.teams must list every
+#                                   placeholder used on a task (the server does not derive it).
+BULK_ASSIGN_PLACEHOLDERS = {
+    "PS Consultant": {"teamId": 351688, "teamName": "PS Consultant", "teamType": "NATIVE",
+                      "roleId": 133617, "identityType": "TEAM", "resolved": False},
+    "Customer":      {"teamId": 160708, "teamName": "Customer", "teamType": "EXTERNAL",
+                      "roleId": -1, "identityType": "TEAM", "resolved": False},
+    "PMO":           {"teamId": 238413, "teamName": "PMO", "teamType": "NATIVE",
+                      "roleId": 128021, "identityType": "TEAM", "resolved": False},
+}
+BULK_ASSIGN_NAME_PREFIX = "PS - DC1"  # only templates whose name starts with this are listed
+BULK_ASSIGN_TEAM_IDS ={p["teamId"] for p in BULK_ASSIGN_PLACEHOLDERS.values()}
+# Fields the PUT accepts back (read-only keys like createdBy/account are dropped).
+_TEMPLATE_PUT_KEYS = ("templateName", "templateContent", "templateMeta", "state", "objectType",
+                      "sourceType", "effortPlanning", "autoBudgetedHours", "autoAllocation")
+
+
+def _iter_template_tasks(template):
+    """Yield (phase_name, task) for every task and subtask in a project template."""
+    def walk(tasks, phase_name):
+        for t in tasks or []:
+            yield phase_name, t
+            yield from walk(t.get("subTasks"), phase_name)
+    for ph in (template.get("templateContent") or {}).get("projectPhases") or []:
+        yield from walk(ph.get("tasks"), ph.get("projectPhaseName") or "")
+
+
+def _task_has_role_assignee(task):
+    teams = (task.get("assignee") or {}).get("teams") or []
+    return any(tm.get("teamId") in BULK_ASSIGN_TEAM_IDS for tm in teams)
+
+
+_TEMPLATE_CACHE = {}          # template_id -> (fetched_at, detail); read-side only
+_TEMPLATE_CACHE_TTL = 300     # seconds; the assign route always reads fresh
+
+
+def _fetch_template(template_id):
+    """GET one template, retrying rate limits (429) and 5xx with backoff / Retry-After."""
+    for attempt in range(6):
+        resp = requests.get(f"{ROCKETLANE_API_BASE_URL}/v1/templates/{template_id}",
+                            headers=HEADERS, timeout=60)
+        if resp.status_code != 429 and resp.status_code < 500:
+            break
+        try:
+            delay = float(resp.headers.get("Retry-After", ""))
+        except ValueError:
+            delay = 3 * 2 ** attempt
+        time.sleep(min(delay, 30))
+    resp.raise_for_status()
+    return resp.json()
+
+
+@app.route("/bulk-assign/templates", methods=["GET"])
+@require_role("Manager", "Project Manager")
+def bulk_assign_templates():
+    """All project templates with the tasks not yet assigned to a Customer, PMO or PS Consultant."""
+    try:
+        resp = requests.get(f"{ROCKETLANE_API_BASE_URL}/v1/templates", headers=HEADERS, timeout=30)
+        resp.raise_for_status()
+        listing = [t for t in resp.json() if t.get("objectType") == "PROJECT"
+                   and t.get("state") == "PUBLISHED"
+                   and (t.get("templateName") or "").startswith(BULK_ASSIGN_NAME_PREFIX)]
+    except requests.exceptions.RequestException as exc:
+        return jsonify({"error": f"Could not fetch templates: {exc}"}), 502
+
+    def load(t):
+        hit = _TEMPLATE_CACHE.get(t["templateId"])
+        if hit and time.time() - hit[0] < _TEMPLATE_CACHE_TTL:
+            return t, hit[1], None
+        try:
+            detail = _fetch_template(t["templateId"])
+            _TEMPLATE_CACHE[t["templateId"]] = (time.time(), detail)
+            return t, detail, None
+        except requests.exceptions.RequestException as exc:
+            return t, None, str(exc)
+
+    templates, failed = [], []
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for t, detail, err in ex.map(load, listing):
+            if err:
+                app.logger.warning("bulk-assign: template %s failed: %s", t.get("templateId"), err)
+                failed.append(f"{t.get('templateName')} ({err[:120]})")
+                continue
+            tasks = []
+            for phase, task in _iter_template_tasks(detail):
+                if _task_has_role_assignee(task):
+                    continue
+                name = _html_to_text(task.get("taskName"), limit=200)
+                tasks.append({"taskId": task["taskId"], "taskName": name, "phase": phase})
+            if tasks:
+                templates.append({"templateId": t["templateId"],
+                                  "templateName": t.get("templateName") or "", "tasks": tasks})
+    templates.sort(key=lambda t: t["templateName"].lower())
+    return jsonify({"templates": templates, "failed": failed,
+                    "roles": list(BULK_ASSIGN_PLACEHOLDERS)})
+
+
+@app.route("/bulk-assign/assign", methods=["POST"])
+@require_role("Manager", "Project Manager")
+def bulk_assign_assign():
+    """Body: {"assignments": [{"templateId": int, "taskId": int, "role": "PS Consultant"|...}]}.
+
+    Adds the role placeholder to each task's existing assignees (nothing is removed). Each
+    template is re-read fresh and written once; tasks that gained a Customer/PMO/PS Consultant
+    assignee since the list was loaded are skipped.
+    """
+    items = (request.get_json(silent=True) or {}).get("assignments")
+    if not isinstance(items, list) or not items:
+        return jsonify({"error": "No assignments provided."}), 400
+    by_template = {}
+    for it in items:
+        role = it.get("role")
+        if role not in BULK_ASSIGN_PLACEHOLDERS or not isinstance(it.get("templateId"), int) \
+                or not isinstance(it.get("taskId"), int):
+            return jsonify({"error": f"Invalid assignment: {it}"}), 400
+        by_template.setdefault(it["templateId"], {})[it["taskId"]] = role
+
+    def apply(item):
+        template_id, wanted = item
+        try:
+            detail = _fetch_template(template_id)
+            teams_used, assigned, skipped = {}, 0, 0
+            for _, task in _iter_template_tasks(detail):
+                role = wanted.get(task.get("taskId"))
+                if role is None:
+                    continue
+                if _task_has_role_assignee(task):
+                    skipped += 1
+                    continue
+                ph = dict(BULK_ASSIGN_PLACEHOLDERS[role])
+                assignee = task.setdefault("assignee", {"users": [], "teams": []})
+                assignee.setdefault("users", [])
+                assignee.setdefault("teams", []).append(ph)
+                teams_used[ph["teamId"]] = ph
+                assigned += 1
+            if not assigned:
+                return {"templateId": template_id, "name": detail.get("templateName"),
+                        "assigned": 0, "skipped": skipped}
+            meta = detail.get("templateMeta") or {}
+            meta_teams = meta.setdefault("assignee", {"users": [], "teams": []}).setdefault("teams", [])
+            known = {tm.get("teamId") for tm in meta_teams}
+            meta_teams.extend(ph for tid, ph in teams_used.items() if tid not in known)
+            body = {k: detail[k] for k in _TEMPLATE_PUT_KEYS if k in detail}
+            body["templateMeta"] = meta
+            put = requests.put(f"{ROCKETLANE_API_BASE_URL}/v1/templates/{template_id}",
+                               headers=HEADERS, json=body, timeout=90)
+            put.raise_for_status()
+            _TEMPLATE_CACHE.pop(template_id, None)
+            return {"templateId": template_id, "name": detail.get("templateName"),
+                    "assigned": assigned, "skipped": skipped}
+        except requests.exceptions.RequestException as exc:
+            return {"templateId": template_id, "error": str(exc)}
+
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        results = list(ex.map(apply, by_template.items()))
+    app.logger.info("bulk-assign by %s: %s", session["user"].get("email"), results)
+    return jsonify({"results": results,
+                    "assigned": sum(r.get("assigned", 0) for r in results),
+                    "errors": [r for r in results if r.get("error")]})
 
 
 @app.route("/export-backlog/<group>")
